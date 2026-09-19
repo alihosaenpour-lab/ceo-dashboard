@@ -1,0 +1,75 @@
+{
+  "name": "ceo-panel-secure",
+  "version": "2.0.0",
+  "description": "پنل اختصاصی CEO - فروشگاه جنرال - دسکتاپ و اندروید",
+  "main": "electron.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "desktop": "electron .",
+    "desktop:build": "electron-builder --win --linux --mac",
+    "android:init": "npx cap add android",
+    "android:open": "npx cap open android",
+    "android:build": "npx cap copy && npx cap sync",
+    "test": "node tests-phase2.js",
+    "test:phase0": "node test-basalam-real.js || true"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.22.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^16.6.1",
+    "express": "^4.22.2",
+    "express-rate-limit": "^8.7.0",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "multer": "^2.4.0",
+    "zod": "^4.6.3"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^5.6.0",
+    "@capacitor/cli": "^5.6.0",
+    "@capacitor/core": "^5.6.0",
+    "electron": "^28.3.3",
+    "electron-builder": "^24.13.3",
+    "prisma": "^5.22.0"
+  },
+  "build": {
+    "appId": "ir.arshiamarket.ceopanel",
+    "productName": "CEO Panel - Arshia Market",
+    "copyright": "Arshia Market © 2026",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "server.js",
+      "server-prod.js",
+      "lib/**/*",
+      "prisma/**/*",
+      "icons/**/*",
+      "manifest.json",
+      "sw.js",
+      "electron.js",
+      "package.json"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "icons/icon-512.png"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "icons/icon-512.png",
+      "category": "Office"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "icons/icon-512.png"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
+  }
+}

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تست واقعی باسلام - در مرورگر</title>
+<style>
+  body{font-family:Tahoma;background:#0a0e1a;color:#f1f5f9;padding:20px;max-width:700px;margin:0 auto}
+  .card{background:#111827;border:1px solid #1e2d4a;border-radius:16px;padding:20px;margin:16px 0}
+  button{background:linear-gradient(135deg,#3b82f6,#06b6d4);color:white;border:none;padding:12px 20px;border-radius:12px;font-weight:800;cursor:pointer;width:100%;font-size:14px}
+  button:hover{opacity:.9}
+  pre{background:#0f172a;border:1px solid #1e2d4a;border-radius:12px;padding:14px;overflow:auto;direction:ltr;text-align:left;font-size:12px;white-space:pre-wrap;word-break:break-word}
+  .ok{color:#10b981} .err{color:#ef4444} .wait{color:#f59e0b}
+  input{width:100%;background:#0f172a;border:1px solid #1e2d4a;color:white;padding:12px;border-radius:10px;direction:ltr}
+</style>
+</head>
+<body>
+<h2 style="text-align:center">🧪 تست واقعی باسلام — در گوگل (مرورگر)</h2>
+<p style="text-align:center;color:#94a3b8;font-size:13px">توکن 09017909857 شما — بدون نصب، همینجا تو کروم تست کن</p>
+
+<div class="card">
+  <label style="font-size:12px;color:#94a3b8">🔑 توکن (پر شده):</label>
+  <input id="token" type="password" value="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJhdWQiOiI1NTAiLCJqdGkiOiI3MTcwYzA1MDkxY2QxYmUxNzc3ODg2OGFjZmNkNjEyMTI5YmFlNDBiNzI4Mzk5NjVhZjQ3YzVhODQ0ODJmMTliZjlkYjE0MzkxZTA0OGEzYSIsImlhdCI6MTc4OTI1MTA5MS40ODAzNzYsIm5iZiI6MTc4OTI1MTA5MS40ODAzODIsImV4cCI6MTgyMDc4NzA5MS40NDkxNDksInN1YiI6IjE3Mzk5MDg5Iiwic2NvcGVzIjpbIm9yZGVyLXByb2Nlc3NpbmciLCJ2ZW5kb3IucHJvZHVjdC5yZWFkIiwidmVuZG9yLnByb2R1Y3Qud3JpdGUiLCJjdXN0b21lci5vcmRlci5yZWFkIiwidmVuZG9yLnBhcmNlbC5yZWFkIiwiY3VzdG9tZXIub3JkZXIud3JpdGUiLCJ2ZW5kb3IucGFyY2VsLndyaXRlIiwiY3VzdG9tZXIuY2hhdC53cml0ZSJdLCJ1c2VyX2lkIjoxNzM5OTA4OX0.kBokaWR28-SEMiICtjYlfz83ASLmHrXhK23RfGX7OYr0DqAUhEazyfKHGViIotyRcDdeQloGEwHXSk5LkrQVTjGPS-42l0EhwuYLU7gmUQ201817evugRTtvAlP9fSzmucmQFWZel6BAEF7imIQ1KWd2oQaiZfPR95pkmlCeQiedVXt9TsdRivpdE84vgrwwUdZZw7aLZLQZ6-Ko9QqQ4Jhajn2FxOTLywS7zhvuO6SOofBPhQgqcWbcHnz6Ly-zzv4D47h8mPuQ1oMkOH1jqz2AUVnr2Jzn8w3p5htT5KR382vfeqVTuDWwufnfpLLMB_iHRrW-K1vN7vszwCUAUKc6rcuwT_kpXYLLUErxBqxH1_ARRvbTTn9xMep_geQm9HOGLd7BY623g-gD100sFjOLCLGMAdAhon3KZVtRVS7PrFnAVFqfOohfhiy0CnNli57ipfCtxZ_MELk7JrtPJEZMN5uyLqzwois8dLTIuxswGDJwedrr_GuErEFuaO41NdVtR-Q42Voo8ZogU1P36BkiFftGYWeq0c82L59vVk9y9FwwFM_0i5SnJaCcOWOwQrvPesvgVFTYiKuBSMtZXVsPAMzlNo7-f9gbZoMZTfyQNkykRfzz3PCdzSNfsS1z2AlDME-xk0S5oJKsG00076oxeAfbqZAMztvBdgc7LGg">
+  <label style="font-size:12px;color:#94a3b8;display:block;margin-top:12px">یا توکن جدید پیست کن:</label>
+  <button onclick="document.getElementById('token').type = document.getElementById('token').type==='password'?'text':'password'" style="background:#1e293b;width:auto;padding:6px 12px;font-size:11px;margin-top:6px">👁️ نمایش/مخفی</button>
+</div>
+
+<div class="card">
+  <button onclick="testBasalam()">🚀 تست بزن — ببین وصله یا نه</button>
+  <div id="status" style="margin-top:12px;font-size:13px"></div>
+  <pre id="output" style="display:none"></pre>
+</div>
+
+<div class="card" style="background:linear-gradient(135deg,#064e3b,#065f46);border-color:#10b981">
+  <h4 style="margin:0">💡 اگر ارور CORS دیدی؟</h4>
+  <p style="font-size:12px;color:#a7f3d0;margin-top:6px;line-height:1.7">
+  مرورگر گوگل CORS رو بلاک می‌کنه. 2 راه:<br>
+  1) افزونه <b>Allow CORS</b> رو نصب کن و دوباره تست بزن<br>
+  2) یا فایل <b>test-basalam-real.js</b> رو با Node روی سیستم اجرا کن (100% کار می‌کنه)
+  </p>
+</div>
+
+<script>
+async function testBasalam(){
+  const token = document.getElementById('token').value.trim();
+  const status = document.getElementById('status');
+  const out = document.getElementById('output');
+  status.innerHTML = '<span class="wait">⏳ در حال اتصال به openapi.basalam.com...</span>';
+  out.style.display='none';
+  out.textContent='';
+
+  try{
+    // 1. users/me
+    status.innerHTML = '<span class="wait">1️⃣ دریافت اطلاعات کاربر...</span>';
+    let r = await fetch("https://openapi.basalam.com/v1/users/me", {
+      headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
+    });
+    let text = await r.text();
+    let j;
+    try{ j = JSON.parse(text); } catch(e){ j = text; }
+    
+    status.innerHTML += `<br><span class="${r.ok?'ok':'err'}">Status: ${r.status} ${r.ok?'✅':'❌'}</span>`;
+    out.style.display='block';
+    out.textContent = typeof j === 'string' ? j.slice(0,2000) : JSON.stringify(j, null, 2).slice(0, 3000);
+    
+    if(r.ok && j.vendor){
+      status.innerHTML += `<br><br><span class="ok">🏪 غرفه: ${j.vendor.name}</span><br><span class="ok">🔗 شناسه: ${j.vendor.identifier}</span><br><span class="ok">🆔 Vendor ID: ${j.vendor.id}</span>`;
+      
+      // 2. products
+      status.innerHTML += '<br><br><span class="wait">2️⃣ دریافت محصولات...</span>';
+      let r2 = await fetch(`https://openapi.basalam.com/v1/vendors/${j.vendor.id}/products?size=3`, {
+        headers: { "Authorization": `Bearer ${token}`, "Accept": "application/json" }
+      });
+      let t2 = await r2.text();
+      let j2;
+      try{ j2 = JSON.parse(t2); } catch(e){ j2 = t2; }
+      status.innerHTML += `<br><span class="${r2.ok?'ok':'err'}">Status: ${r2.status} ${r2.ok?'✅':'❌'}</span>`;
+      out.textContent += "\n\n--- محصولات ---\n" + (typeof j2==='string'? j2.slice(0,2000) : JSON.stringify(j2,null,2).slice(0,2000));
+      
+      if(r2.ok){
+        status.innerHTML += '<br><br><span class="ok">✅ تست کامل شد! باسلام وصله و AI می‌تواند تولید محتوا کند</span>';
+      }
+    } else if(r.ok){
+      status.innerHTML += '<br><span class="ok">✅ توکن سالمه ولی vendor پیدا نشد - User ID: '+ (j.id||j.user_id) +'</span>';
+    }
+  } catch(e){
+    status.innerHTML = `<span class="err">❌ خطا: ${e.message}</span><br><span style="color:#94a3b8">اگر CORS بود: با Node تست کن (test-basalam-real.js)</span>`;
+    out.style.display='block';
+    out.textContent = e.stack || e.message;
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+{
+  "name": "پنل CEO - فروشگاه جنرال",
+  "short_name": "CEO Panel",
+  "description": "پنل اختصاصی کارفرما - مدیریت فروشگاه جنرال با پرسنل AI",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#080c18",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "lang": "fa",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "سفارشات",
+      "url": "./index.html#orders",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "برنامه فردا",
+      "url": "./index.html#planner",
+      "icons": [{ "src": "icons/icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}
