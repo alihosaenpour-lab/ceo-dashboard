@@ -1,0 +1,70 @@
+# Nginx reverse proxy for CEO Panel — Phase 4 Production
+# Place in /etc/nginx/sites-available/ceo-panel then ln -s to sites-enabled
+server {
+    listen 80;
+    server_name panel.yourstore.ir;
+    # Redirect to HTTPS (after certbot/acme.sh)
+    return 301 https://$host$request_uri;
+}
+server {
+    listen 443 ssl http2;
+    server_name panel.yourstore.ir;
+
+    ssl_certificate /etc/letsencrypt/live/panel.yourstore.ir/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/panel.yourstore.ir/privkey.pem;
+    # Strong SSL
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384;
+    ssl_prefer_server_ciphers off;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+
+    # Limit webhooks / uploads
+    client_max_body_size 1m;
+    client_body_timeout 10s;
+
+    # Rate limit zones (optional, app also has express-rate-limit)
+    # limit_req_zone $binary_remote_addr zone=webhook:10m rate=200r/m;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 30s;
+        proxy_send_timeout 30s;
+    }
+
+    # Health endpoint — allow without rate limit for uptime checks
+    location /api/health {
+        proxy_pass http://127.0.0.1:3000;
+        access_log off;
+    }
+
+    # Webhooks must be public, but rate limited
+    location ~ ^/api/(integrations|basalam-hook) {
+        # limit_req zone=webhook burst=20 nodelay;
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Block sensitive files (also blocked in app)
+    location ~ /\.(env|git) { return 404; }
+
+    access_log /var/log/nginx/ceo-panel-access.log;
+    error_log /var/log/nginx/ceo-panel-error.log;
+}
+# Firewall: ufw allow 443,80,22; ufw deny 3000 external
+# Backup: pg_dump ceo_panel | gzip > /backup/ceo_panel-$(date +%F).sql.gz (daily cron)
+# Log rotation: /etc/logrotate.d/ceo-panel -> logs/*.log daily rotate 14

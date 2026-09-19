@@ -8,6 +8,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs');
 const cookieParser = require('cookie-parser');
 const { z } = require('zod');
 const path = require('path');
@@ -276,24 +277,41 @@ app.post('/api/auth/verify-otp', async (req,res)=>{
     if(phone.length===10) phone='0'+phone;
     const otp = otpParsed.data;
 
-    // === UNIVERSAL TEST BYPASS (NON-PRODUCTION ONLY) ===
-    // Any phone + any OTP works — for user requested "هر شماره و هر رمزی باز بشه"
+    // === SECURE MODE: if user has passwordHash, universal bypass disabled — must use /api/auth/login ---
+    // === UNIVERSAL TEST BYPASS (NON-PRODUCTION ONLY) for users WITHOUT password ---
     if(process.env.NODE_ENV !== 'production'){
       let existingUniversal = await prisma.user.findUnique({ where:{ phone } }).catch(()=>null);
-      let userUniversal;
-      if(existingUniversal){
-        userUniversal = await prisma.user.update({ where:{ phone }, data:{ lastLoginAt:new Date() } });
+      if(existingUniversal && existingUniversal.passwordHash){
+        // Owner has set password — bypass blocked, must use password login
+        // fall through to real OTP validation (will fail unless correct OTP), but better tell user
+        // we do NOT return here, let production logic handle (requires real OTP). For UX, we can reject with hint
+        // But we still want to allow password login separately — so OTP path will require real OTP now
       } else {
-        userUniversal = await prisma.user.create({ data:{ phone, role:'CEO', isTestAccount:false } });
+        let userUniversal;
+        if(existingUniversal){
+          userUniversal = await prisma.user.update({ where:{ phone }, data:{ lastLoginAt:new Date() } });
+        } else {
+          userUniversal = await prisma.user.create({ data:{ phone, role:'CEO', isTestAccount:false } });
+        }
+        await prisma.otpRequest.updateMany({ where:{ phone, usedAt:null }, data:{ usedAt:new Date() } }).catch(()=>{});
+        await prisma.auditLog.create({ data:{ actorUserId:userUniversal.id, action:'OTP_VERIFY', entityType:'User', entityId:userUniversal.id, ip:req.ip, metadata:{ requestId:req.requestId, isTestAccount: userUniversal.isTestAccount, universalTestBypass:true, otpProvided: '***' } } }).catch(()=>{});
+        const tokenUniversal = signJWT(phone, userUniversal.role, userUniversal.isTestAccount);
+        res.cookie('ceo_token', tokenUniversal, { httpOnly:true, secure:process.env.NODE_ENV==='production', sameSite:'lax', maxAge:12*60*60*1000 });
+        return res.json({ ok:true, success:true, message:'ورود موفق (تست - هر رمز)', token: tokenUniversal, requestId:req.requestId, testMode:true });
       }
-      await prisma.otpRequest.updateMany({ where:{ phone, usedAt:null }, data:{ usedAt:new Date() } }).catch(()=>{});
-      await prisma.auditLog.create({ data:{ actorUserId:userUniversal.id, action:'OTP_VERIFY', entityType:'User', entityId:userUniversal.id, ip:req.ip, metadata:{ requestId:req.requestId, isTestAccount: userUniversal.isTestAccount, universalTestBypass:true, otpProvided: '***' } } }).catch(()=>{});
-      const tokenUniversal = signJWT(phone, userUniversal.role, userUniversal.isTestAccount);
-      res.cookie('ceo_token', tokenUniversal, { httpOnly:true, secure:process.env.NODE_ENV==='production', sameSite:'lax', maxAge:12*60*60*1000 });
-      return res.json({ ok:true, success:true, message:'ورود موفق (تست - هر رمز)', token: tokenUniversal, requestId:req.requestId, testMode:true });
     }
     // === PRODUCTION: real OTP validation ===
     let existingUserForCheck = await prisma.user.findUnique({ where:{ phone } }).catch(()=>null);
+    // If user has passwordHash and is not test account, enforce password login — OTP bypass disabled for security
+    if(existingUserForCheck && existingUserForCheck.passwordHash && !existingUserForCheck.isTestAccount){
+      // Still allow OTP if they provide correct real OTP? But we block universal bypass; for extra security, require password
+      // Allow fallback to real OTP only if they have a valid OTP record — otherwise hint to use password
+      // We check if OTP record exists; if not, tell them to use password login
+      const hasOtpRecord = await prisma.otpRequest.findFirst({ where:{ phone }, orderBy:{ createdAt:'desc' } }).catch(()=>null);
+      if(!hasOtpRecord){
+        return res.status(401).json({ success:false, error:{ code:'PASSWORD_REQUIRED', message:'این حساب با رمز محافظت شده — لطفا از ورود با رمز عبور استفاده کن ( /api/auth/login )', requestId:req.requestId }});
+      }
+    }
     const isTestAccountCheck = !!existingUserForCheck?.isTestAccount;
     if(!isTestAccountCheck && ALLOWED_PHONE && phone.replace(/\D/g,'').slice(-10)!==ALLOWED_PHONE) return res.status(403).json({ success:false, error:{ code:'FORBIDDEN', message:'⛔ شماره مجاز نیست', requestId:req.requestId }});
     const record = await prisma.otpRequest.findFirst({ where:{ phone }, orderBy:{ createdAt:'desc' } });
@@ -325,6 +343,62 @@ app.post('/api/auth/verify-otp', async (req,res)=>{
     console.error('[OTP_VERIFY_ERROR]', e.message);
     return res.status(500).json({ success:false, error:{ code:'SERVER_ERROR', message:'خطای سرور', requestId:req.requestId }});
   }
+});
+
+// --- Secure Password Login (NO SMS) — owner requested ---
+const loginLimiter = rateLimit({ windowMs: 60*1000, max: 10, message: { success:false, error:{ code:'RATE_LIMIT', message:'تعداد تلاش زیاد - 1 دقیقه صبر کن' } }, standardHeaders:true, legacyHeaders:false });
+app.post('/api/auth/login', loginLimiter, async (req,res)=>{
+  try{
+    const phoneRaw = (req.body.phone||'').replace(/\D/g,'').slice(-11);
+    const password = (req.body.password||'').trim();
+    const phoneParsed = phoneSchema.safeParse(phoneRaw);
+    if(!phoneParsed.success) return res.status(400).json({ success:false, error:{ code:'INVALID_PHONE', message:'شماره نامعتبر', requestId:req.requestId }});
+    if(!password || password.length<4) return res.status(400).json({ success:false, error:{ code:'INVALID_PASSWORD', message:'رمز نامعتبر', requestId:req.requestId }});
+    let phone = phoneParsed.data.slice(-10);
+    if(phone.length===10) phone='0'+phone;
+    const user = await prisma.user.findUnique({ where:{ phone } });
+    if(!user) return res.status(401).json({ success:false, error:{ code:'INVALID_CREDENTIALS', message:'شماره یا رمز اشتباه است', requestId:req.requestId }});
+    if(!user.isActive) return res.status(403).json({ success:false, error:{ code:'INACTIVE', message:'حساب غیرفعال', requestId:req.requestId }});
+    if(!user.passwordHash) return res.status(401).json({ success:false, error:{ code:'NO_PASSWORD_SET', message:'برای این حساب رمز تنظیم نشده - از ورود با کد استفاده کن یا رمز بساز', requestId:req.requestId }});
+    const ok = await bcrypt.compare(password, user.passwordHash);
+    if(!ok){
+      await prisma.auditLog.create({ data:{ actorUserId:user.id, action:'LOGIN_FAILED', entityType:'User', entityId:user.id, ip:req.ip, metadata:{ requestId:req.requestId, reason:'bad password' } }}).catch(()=>{});
+      // increment attempts? simple
+      return res.status(401).json({ success:false, error:{ code:'INVALID_CREDENTIALS', message:'شماره یا رمز اشتباه است', requestId:req.requestId }});
+    }
+    // optional: check ALLOWED_PHONE still
+    if(ALLOWED_PHONE && user.role==='CEO' && !user.isTestAccount && phone.replace(/\D/g,'').slice(-10)!==ALLOWED_PHONE){
+      return res.status(403).json({ success:false, error:{ code:'FORBIDDEN', message:'شماره مجاز نیست', requestId:req.requestId }});
+    }
+    await prisma.user.update({ where:{ phone }, data:{ lastLoginAt:new Date() }}).catch(()=>{});
+    await prisma.auditLog.create({ data:{ actorUserId:user.id, action:'LOGIN_SUCCESS', entityType:'User', entityId:user.id, ip:req.ip, metadata:{ requestId:req.requestId, method:'password' } }}).catch(()=>{});
+    const token = signJWT(phone, user.role, user.isTestAccount);
+    res.cookie('ceo_token', token, { httpOnly:true, secure:process.env.NODE_ENV==='production', sameSite:'lax', maxAge:12*60*60*1000 });
+    return res.json({ ok:true, success:true, message:'ورود موفق', token, role:user.role, requestId:req.requestId });
+  }catch(e){
+    console.error('[LOGIN_ERROR]', e.message);
+    return res.status(500).json({ success:false, error:{ code:'SERVER_ERROR', message:'خطای سرور', requestId:req.requestId }});
+  }
+});
+// Change/Set password (requires JWT) — owner can set first password without oldPassword
+app.post('/api/auth/set-password', verifyJWT, async (req,res)=>{
+  try{
+    const { oldPassword, newPassword } = req.body || {};
+    if(!newPassword || newPassword.length<8) return res.status(400).json({ success:false, error:{ code:'WEAK_PASSWORD', message:'رمز باید حداقل 8 کاراکتر باشد', requestId:req.requestId }});
+    if(newPassword.length>64) return res.status(400).json({ success:false, error:{ code:'WEAK_PASSWORD', message:'رمز خیلی طولانی', requestId:req.requestId }});
+    const user = await prisma.user.findUnique({ where:{ phone:req.user.phone } });
+    if(!user) return res.status(404).json({ success:false, error:{ code:'NOT_FOUND', requestId:req.requestId }});
+    // If user already has passwordHash, must verify oldPassword
+    if(user.passwordHash){
+      if(!oldPassword) return res.status(400).json({ success:false, error:{ code:'MISSING_OLD', message:'رمز فعلی را وارد کن', requestId:req.requestId }});
+      const ok = await bcrypt.compare(oldPassword, user.passwordHash);
+      if(!ok) return res.status(401).json({ success:false, error:{ code:'INVALID_OLD', message:'رمز فعلی اشتباه است', requestId:req.requestId }});
+    }
+    const hash = await bcrypt.hash(newPassword, 10);
+    await prisma.user.update({ where:{ phone:req.user.phone }, data:{ passwordHash:hash, passwordUpdatedAt:new Date() }});
+    await prisma.auditLog.create({ data:{ actorUserId:user.id, action:'PASSWORD_CHANGED', entityType:'User', entityId:user.id, ip:req.ip, metadata:{ requestId:req.requestId } }}).catch(()=>{});
+    res.json({ success:true, message:'رمز بروز شد', requestId:req.requestId });
+  }catch(e){ console.error('[SET_PASSWORD_ERROR]', e.message); res.status(500).json({ success:false, error:{ code:'SERVER_ERROR', requestId:req.requestId }}); }
 });
 
 app.post('/api/auth/logout', (req,res)=>{ res.clearCookie('ceo_token'); res.json({ ok:true, success:true, message:'خروج موفق', requestId:req.requestId }); });

@@ -1,0 +1,724 @@
+// CEO Panel — PostgreSQL + Prisma — PHASE 3 IDENTITY+CRM
+generator client {
+  provider = "prisma-client-js"
+}
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// --- Enums ---
+enum Role {
+  CEO
+  ADMIN
+  MANAGER
+  SALES
+  SUPPORT
+  MARKETING
+  INVENTORY
+  FINANCE
+  ANALYST
+  OPERATOR
+  VIEWER
+  AGENT
+  TEST_ADMIN
+  TEST_MANAGER
+  TEST_SALES
+  TEST_MARKETING
+  TEST_SUPPORT
+}
+enum IntegrationProvider {
+  TELEGRAM
+  INSTAGRAM
+  FACEBOOK
+  LINKEDIN
+  BASALAM
+  WEBSITE
+  AI
+  OTHER
+}
+enum IntegrationStatus {
+  NOT_CONFIGURED
+  CONNECTING
+  CONNECTED
+  TOKEN_EXPIRED
+  INVALID_CREDENTIALS
+  DISCONNECTED
+  ERROR
+}
+enum AgentAction {
+  READ
+  SEND
+  REPLY
+  CREATE_DRAFT
+  PUBLISH
+  EDIT
+  DELETE
+  ANALYZE
+  SEARCH
+  FETCH_ACCOUNT
+  MANAGE_WEBHOOK
+  MANAGE_CREDENTIAL
+}
+enum OrderStatus {
+  DRAFT
+  PENDING
+  PENDING_APPROVAL
+  APPROVED
+  PAID
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REJECTED
+  RETURN_REQUESTED
+  REFUNDED
+}
+enum PaymentStatus {
+  UNPAID
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+enum Source {
+  WEBSITE
+  TELEGRAM
+  INSTAGRAM
+  BASALAM
+  MANUAL
+  OTHER
+}
+enum InventoryTransactionType {
+  PURCHASE
+  SALE
+  RESERVATION
+  RELEASE
+  ADJUSTMENT
+  RETURN
+  DAMAGE
+}
+enum ScheduledContentStatus {
+  DRAFT
+  PENDING_APPROVAL
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  FAILED
+  CANCELLED
+}
+enum ScheduledContentPlatform {
+  INSTAGRAM
+  BASALAM
+  TELEGRAM
+  WEBSITE
+}
+enum CustomerStatus {
+  NEW
+  LEAD
+  ACTIVE
+  CUSTOMER
+  VIP
+  INACTIVE
+  BLOCKED
+}
+enum LeadStatus {
+  NEW
+  CONTACTED
+  QUALIFIED
+  QUOTED
+  NEGOTIATING
+  WON
+  LOST
+  CLOSED
+}
+enum FollowUpStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+enum FollowUpType {
+  CALL
+  MESSAGE
+  VISIT
+  EMAIL
+  OTHER
+}
+enum MessageStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  IGNORED
+}
+enum IdentityChannel {
+  PHONE
+  TELEGRAM
+  INSTAGRAM
+  BASALAM
+  WEBSITE
+  EMAIL
+}
+
+// --- User ---
+model User {
+  id            String   @id @default(cuid())
+  phone         String   @unique
+  role          Role     @default(CEO)
+  isActive      Boolean  @default(true)
+  isTestAccount Boolean  @default(false)
+  displayName   String?
+  passwordHash  String?  @db.Text
+  passwordUpdatedAt DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  lastLoginAt   DateTime?
+  sessions      Session[]
+  auditLogs     AuditLog[]
+  notes         CustomerNote[]
+  leadsAssigned Lead[] @relation("LeadAssigned")
+  followUpsAssigned FollowUp[] @relation("FollowUpAssigned")
+  humanReviewsResolved HumanReview[] @relation("HumanReviewResolver")
+  agentPermissions AgentPermission[]
+  mediaAssets      MediaAsset[]
+
+  @@index([phone])
+  @@index([isTestAccount])
+  @@map("users")
+}
+model Session {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  ip        String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+model OtpRequest {
+  id        String    @id @default(cuid())
+  phone     String
+  otpHash   String
+  expiresAt DateTime
+  attempts  Int       @default(0)
+  usedAt    DateTime?
+  requestIp String?
+  userAgent String?
+  createdAt DateTime  @default(now())
+
+  @@index([phone])
+  @@index([expiresAt])
+  @@map("otp_requests")
+}
+
+// --- Customer / CRM ---
+model Customer {
+  id              String   @id @default(cuid())
+  phone           String   @unique
+  normalizedPhone String?  @unique
+  name            String?
+  email           String?
+  city            String?
+  source          Source   @default(MANUAL)
+  status          CustomerStatus @default(NEW)
+  notes           String?
+  isActive        Boolean  @default(true)
+  isTestData      Boolean  @default(false)
+  firstSeenAt     DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orders          Order[]
+  messages        Message[]
+  identities      CustomerIdentity[]
+  leads           Lead[]
+  followUps       FollowUp[]
+  customerNotes   CustomerNote[]
+  tags            CustomerTag[]
+  timeline        CustomerTimeline[]
+
+  @@index([phone])
+  @@index([normalizedPhone])
+  @@index([status])
+  @@index([createdAt])
+  @@index([lastSeenAt])
+  @@map("customers")
+}
+model CustomerIdentity {
+  id          String          @id @default(cuid())
+  customerId  String
+  customer    Customer        @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  channel     IdentityChannel
+  externalId  String
+  username    String?
+  displayName String?
+  metadata    Json?
+  lastSeenAt  DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@unique([channel, externalId])
+  @@index([customerId])
+  @@index([channel])
+  @@map("customer_identities")
+}
+model Tag {
+  id        String        @id @default(cuid())
+  name      String        @unique
+  color     String?       @default("#3b82f6")
+  createdAt DateTime      @default(now())
+  customers CustomerTag[]
+  @@map("tags")
+}
+model CustomerTag {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tagId      String
+  tag        Tag      @relation(fields: [tagId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([customerId, tagId])
+  @@index([customerId])
+  @@index([tagId])
+  @@map("customer_tags")
+}
+model CustomerNote {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  authorId   String?
+  author     User?    @relation(fields: [authorId], references: [id])
+  content    String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([customerId])
+  @@index([authorId])
+  @@map("customer_notes")
+}
+model CustomerTimeline {
+  id         String   @id @default(cuid())
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  eventType  String
+  title      String
+  description String?
+  actorId    String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([customerId])
+  @@index([eventType])
+  @@index([createdAt])
+  @@map("customer_timelines")
+}
+model Message {
+  id                String        @id @default(cuid())
+  customerId        String
+  customer          Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  channel           Source
+  direction         String        // INBOUND / OUTBOUND
+  content           String
+  text              String?       // alias for search
+  externalMessageId String?
+  status            MessageStatus @default(RECEIVED)
+  metadata          Json?
+  isTestData        Boolean       @default(false)
+  receivedAt        DateTime      @default(now())
+  createdAt         DateTime      @default(now())
+
+  @@index([customerId])
+  @@index([channel])
+  @@index([createdAt])
+  @@map("messages")
+}
+model Lead {
+  id                  String     @id @default(cuid())
+  customerId          String
+  customer            Customer   @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  status              LeadStatus @default(NEW)
+  source              Source     @default(MANUAL)
+  score               Int        @default(0)
+  intent              String?
+  interestedProductId String?
+  product             Product?   @relation(fields: [interestedProductId], references: [id])
+  estimatedValue      Decimal?   @db.Decimal(12,2)
+  assignedToId        String?
+  assignedTo          User?      @relation("LeadAssigned", fields: [assignedToId], references: [id])
+  nextFollowUpAt      DateTime?
+  isTestData          Boolean    @default(false)
+  createdAt           DateTime   @default(now())
+  updatedAt           DateTime   @updatedAt
+  followUps           FollowUp[]
+
+  @@index([customerId])
+  @@index([status])
+  @@index([score])
+  @@index([assignedToId])
+  @@map("leads")
+}
+model FollowUp {
+  id          String         @id @default(cuid())
+  customerId  String
+  customer    Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  leadId      String?
+  lead        Lead?          @relation(fields: [leadId], references: [id], onDelete: SetNull)
+  type        FollowUpType   @default(MESSAGE)
+  scheduledAt DateTime
+  status      FollowUpStatus @default(PENDING)
+  assignedToId String?
+  assignedTo  User?          @relation("FollowUpAssigned", fields: [assignedToId], references: [id])
+  reason      String?
+  completedAt DateTime?
+  metadata    Json?
+  isTestData  Boolean        @default(false)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  @@index([customerId])
+  @@index([leadId])
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("follow_ups")
+}
+
+// --- Product ---
+model Product {
+  id              String   @id @default(cuid())
+  sku             String   @unique
+  name            String
+  slug            String   @unique
+  description     String?
+  brand           String?
+  category        String?
+  price           Decimal  @db.Decimal(12, 2)
+  costPrice       Decimal? @db.Decimal(12, 2)
+  stock           Int      @default(0)
+  minStock        Int      @default(5)
+  weight          Int?
+  packageLength   Int?
+  packageWidth    Int?
+  packageHeight   Int?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  inventory       Inventory?
+  orderItems      OrderItem[]
+  inventoryTxs    InventoryTransaction[]
+  leads           Lead[]
+  humanReviews    HumanReview[]
+
+  @@index([category])
+  @@index([isActive])
+  @@map("products")
+}
+model Inventory {
+  id               String   @id @default(cuid())
+  productId        String   @unique
+  product          Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  quantity         Int      @default(0)
+  reservedQuantity Int      @default(0)
+  updatedAt        DateTime @updatedAt
+  @@map("inventories")
+}
+model InventoryTransaction {
+  id             String                    @id @default(cuid())
+  productId      String
+  product        Product                   @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type           InventoryTransactionType
+  quantity       Int
+  beforeQuantity Int
+  afterQuantity  Int
+  referenceType  String?
+  referenceId    String?
+  reason         String?
+  createdBy      String?
+  createdAt      DateTime                  @default(now())
+  @@index([productId])
+  @@index([createdAt])
+  @@map("inventory_transactions")
+}
+
+// --- Order ---
+model Order {
+  id                String      @id @default(cuid())
+  orderNumber       String      @unique
+  customerId        String
+  customer          Customer    @relation(fields: [customerId], references: [id])
+  status            OrderStatus @default(PENDING)
+  paymentStatus     PaymentStatus @default(UNPAID)
+  subtotal          Decimal     @db.Decimal(12, 2)
+  discount          Decimal     @default(0) @db.Decimal(12, 2)
+  shippingCost      Decimal     @default(0) @db.Decimal(12, 2)
+  total             Decimal     @db.Decimal(12, 2)
+  source            Source      @default(MANUAL)
+  notes             String?
+  isTestData        Boolean     @default(false)
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  items             OrderItem[]
+  statusHistory     OrderStatusHistory[]
+  payments          Payment[]
+  humanReviews      HumanReview[]
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([source])
+  @@map("orders")
+}
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  unitPrice Decimal @db.Decimal(12, 2)
+  discount  Decimal @default(0) @db.Decimal(12, 2)
+  total     Decimal @db.Decimal(12, 2)
+  @@index([orderId])
+  @@index([productId])
+  @@map("order_items")
+}
+model OrderStatusHistory {
+  id        String      @id @default(cuid())
+  orderId   String
+  order     Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  fromStatus OrderStatus?
+  toStatus  OrderStatus
+  changedBy String?
+  reason    String?
+  createdAt DateTime    @default(now())
+  @@index([orderId])
+  @@map("order_status_history")
+}
+model Payment {
+  id        String        @id @default(cuid())
+  orderId   String
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  amount    Decimal       @db.Decimal(12, 2)
+  method    String?
+  status    PaymentStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  @@map("payments")
+}
+
+// --- Idempotency ---
+model IdempotencyKey {
+  id             String   @id @default(cuid())
+  key            String
+  scope          String
+  requestHash    String?
+  responseStatus Int?
+  responseBody   String?
+  createdAt      DateTime @default(now())
+  expiresAt      DateTime?
+  @@unique([key, scope])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
+// --- Webhook ---
+model WebhookEvent {
+  id             String    @id @default(cuid())
+  provider       String
+  eventType      String?
+  externalId     String?
+  signatureValid Boolean   @default(false)
+  payloadHash    String?
+  payload        Json?
+  processed      Boolean   @default(false)
+  processedAt    DateTime?
+  error          String?
+  createdAt      DateTime  @default(now())
+  @@unique([provider, externalId])
+  @@index([provider])
+  @@index([createdAt])
+  @@map("webhook_events")
+}
+
+// --- Scheduled Content ---
+model ScheduledContent {
+  id          String                  @id @default(cuid())
+  topic       String
+  platform    ScheduledContentPlatform
+  tone        String?
+  discount    String?
+  scheduledAt DateTime?
+  status      ScheduledContentStatus  @default(DRAFT)
+  createdAt   DateTime                @default(now())
+  updatedAt   DateTime                @updatedAt
+  @@index([status])
+  @@index([scheduledAt])
+  @@map("scheduled_contents")
+}
+
+model HumanReview {
+  id                 String    @id @default(cuid())
+  type               String    // PRODUCT_MAPPING, INVENTORY_INSUFFICIENT
+  status             String    @default("PENDING") // PENDING, APPROVED, REJECTED, REPROCESSED
+  provider           String?
+  externalId         String?
+  payload            Json?
+  inputTitle         String?
+  normalizedTitle    String?
+  matchedProductId   String?
+  product            Product?  @relation(fields: [matchedProductId], references: [id])
+  method             String?   // externalId, sku, exact_title, normalized_title
+  reason             String?
+  requestId          String?
+  inventoryProductId String?
+  requestedQty       Int?
+  availableQty       Int?
+  isTestData         Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  resolvedAt         DateTime?
+  resolvedBy         String?
+  resolver           User?     @relation("HumanReviewResolver", fields: [resolvedBy], references: [id])
+  orderId            String?
+  order              Order?    @relation(fields: [orderId], references: [id])
+
+  @@index([status])
+  @@index([type])
+  @@index([provider])
+  @@index([createdAt])
+  @@map("human_reviews")
+}
+
+// --- Central Control Plane: Integrations, Accounts, Agent Permissions, Media, Prompts, Business Settings ---
+model Integration {
+  id               String              @id @default(cuid())
+  provider         IntegrationProvider @unique
+  displayName      String?
+  status           IntegrationStatus   @default(NOT_CONFIGURED)
+  enabled          Boolean             @default(true)
+  credentialsEncrypted String?         @db.Text // AES-256-GCM encrypted JSON
+  credentialsMasked  Json?             // masked for UI: {botToken:"••••A91F"}
+  config           Json?               // domain, webhook settings, etc.
+  webhookUrl       String?
+  webhookSecretEncrypted String?       @db.Text
+  connectedAt      DateTime?
+  lastTestedAt     DateTime?
+  lastTestStatus   String?
+  lastError        String?             @db.Text
+  expiresAt        DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  accounts         IntegrationAccount[]
+  permissions      AgentPermission[]
+
+  @@index([provider])
+  @@index([status])
+  @@map("integrations")
+}
+model IntegrationAccount {
+  id               String      @id @default(cuid())
+  integrationId    String
+  integration      Integration @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  externalId       String
+  name             String?
+  type             String?     // PAGE, PROFILE, ORGANIZATION, BOT
+  avatarUrl        String?
+  accessTokenEncrypted String? @db.Text
+  metadata         Json?
+  isPrimary        Boolean     @default(false)
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+
+  @@unique([integrationId, externalId])
+  @@index([integrationId])
+  @@map("integration_accounts")
+}
+model AgentPermission {
+  id             String              @id @default(cuid())
+  agentId        String              // User.id with role AGENT or API key
+  agent          User                @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  integrationId  String?
+  integration    Integration?        @relation(fields: [integrationId], references: [id], onDelete: Cascade)
+  provider       IntegrationProvider
+  action         AgentAction
+  allowed        Boolean             @default(false)
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@unique([agentId, provider, action])
+  @@index([agentId])
+  @@index([provider])
+  @@map("agent_permissions")
+}
+model MediaAsset {
+  id          String   @id @default(cuid())
+  filename    String
+  originalName String?
+  mimeType    String?
+  size        Int?
+  url         String   // /uploads/... or S3
+  providerUrl String?  // CDN
+  tags        String[] @default([])
+  category    String?  // product, campaign, platform
+  productId   String?
+  uploadedBy  String?
+  uploader    User?    @relation(fields: [uploadedBy], references: [id])
+  metadata    Json?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([createdAt])
+  @@map("media_assets")
+}
+model PromptTemplate {
+  id          String   @id @default(cuid())
+  key         String   @unique // system.sales, marketing.instagram, etc.
+  name        String
+  content     String   @db.Text
+  version     Int      @default(1)
+  isActive    Boolean  @default(true)
+  category    String?  // system, sales, marketing, support, platform
+  createdBy   String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([isActive])
+  @@map("prompt_templates")
+}
+model BusinessSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique // brand.name, business.hours, etc.
+  value     Json
+  category  String?  // brand, business, product, shipping, followup, ai
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@map("business_settings")
+}
+
+// --- Audit Log ---
+model AuditLog {
+  id           String   @id @default(cuid())
+  actorUserId  String?
+  actor        User?    @relation(fields: [actorUserId], references: [id])
+  action       String
+  entityType   String
+  entityId     String?
+  metadata     Json?
+  ip           String?
+  createdAt    DateTime @default(now())
+  @@index([actorUserId])
+  @@index([entityType])
+  @@index([createdAt])
+  @@map("audit_logs")
+}

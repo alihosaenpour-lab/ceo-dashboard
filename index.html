@@ -207,6 +207,7 @@
       </div>
       <button class="btn-primary" onclick="sendOTP()">ارسال کد تایید →</button>
       <div class="hint">🧪 حالت تست موقت — هر شماره + هر رمز 4 رقمی (مثلا 1111 یا 1234) باز می‌شود — بدون نیاز به پیامک</div>
+      <div style="text-align:center;margin-top:8px"><a href="#" onclick="showPasswordLogin();return false" style="font-size:11px;color:#7dd3fc;font-weight:700">🔒 ورود امن با رمز عبور (بدون پیامک) →</a></div>
       <div class="exclusive">
         <div class="exclusive-icon">⚡</div>
         <div>
@@ -222,7 +223,19 @@
       <button class="btn-primary" onclick="verifyOTP()">ورود به پنل CEO →</button>
       <div class="resend" onclick="sendOTP(true)">ارسال مجدد کد</div>
       <div class="hint">هر کدی بزنید قبول می‌شود — مثلا 0000 یا 1234 یا 9999 (حالت تست)</div>
-      <div style="text-align:center;margin-top:10px"><a href="#" onclick="backToPhone();return false" style="font-size:11px;color:var(--muted)">← تغییر شماره</a></div>
+      <div style="text-align:center;margin-top:10px"><a href="#" onclick="backToPhone();return false" style="font-size:11px;color:var(--muted)">← تغییر شماره</a> • <a href="#" onclick="showPasswordLogin();return false" style="font-size:11px;color:var(--primary)">ورود با رمز عبور 🔒</a></div>
+    </div>
+
+    <div class="form" id="passwordStep" style="display:none">
+      <label class="label">ورود امن با رمز عبور (بدون پیامک) 🔒</label>
+      <div class="phone-wrap">
+        <span class="prefix">+98</span>
+        <input id="pwdPhoneInput" class="input" placeholder="9017909857" value="9017909857" maxlength="10" inputmode="numeric" />
+      </div>
+      <input id="pwdInput" class="input" type="password" placeholder="رمز عبور" style="width:100%;margin-top:10px;background:#0f172a;direction:ltr;text-align:left" />
+      <button class="btn-primary" onclick="loginWithPassword()">ورود با رمز →</button>
+      <div class="hint">🔐 این روش امن‌تر است — فقط کسی که رمز را دارد وارد می‌شود — بدون نیاز به پیامک</div>
+      <div style="text-align:center;margin-top:10px"><a href="#" onclick="showPhoneLogin();return false" style="font-size:11px;color:var(--muted)">← ورود با کد یکبارمصرف</a></div>
     </div>
 
     <div style="text-align:center;margin-top:14px;font-size:10px;color:var(--subtle)">قدرت گرفته از پرسنل AI • نسخه 2.0 Secure • Frankfurt • 2026</div>
@@ -1030,9 +1043,49 @@ async function verifyOTP(){
     console.error('verifyOTP error', e);
   }
 }
+function showPasswordLogin(){
+  document.getElementById('phoneStep').style.display='none';
+  document.getElementById('otpStep').classList.remove('show');
+  document.getElementById('otpStep').style.display='none';
+  document.getElementById('passwordStep').style.display='block';
+  // copy phone if entered
+  const ph=document.getElementById('phoneInput')?.value.replace(/\D/g,'');
+  if(ph && ph.length>=7) document.getElementById('pwdPhoneInput').value=ph;
+  setTimeout(()=>document.getElementById('pwdInput').focus(),200);
+}
+function showPhoneLogin(){
+  document.getElementById('passwordStep').style.display='none';
+  document.getElementById('otpStep').style.display='none';
+  document.getElementById('otpStep').classList.remove('show');
+  document.getElementById('phoneStep').style.display='block';
+}
 function backToPhone(){
   document.getElementById('phoneStep').style.display='block'
   document.getElementById('otpStep').classList.remove('show')
+  document.getElementById('otpStep').style.display='none'
+  document.getElementById('passwordStep').style.display='none'
+}
+async function loginWithPassword(){
+  const phone=document.getElementById('pwdPhoneInput').value.replace(/\D/g,'');
+  const password=document.getElementById('pwdInput').value;
+  if(phone.length<10){ showToast('⚠️ شماره را کامل وارد کن'); return; }
+  if(!password){ showToast('⚠️ رمز را وارد کن'); return; }
+  try{
+    const res=await fetch('/api/auth/login', { method:'POST', headers:{'Content-Type':'application/json'}, credentials:'include', body:JSON.stringify({ phone, password }) });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok) throw new Error(data.error?.message||'رمز اشتباه');
+    isLogged=true;
+    document.getElementById('loginOverlay').style.display='none';
+    document.getElementById('lockedPhone').textContent='+98 '+phone.slice(-10);
+    document.getElementById('avatar').textContent=phone.slice(-2);
+    document.getElementById('welcomeText').textContent='🔒 ورود امن با رمز — خوش آمدید قربان';
+    showToast('✅ ورود امن موفق');
+    setTimeout(()=>loadDashboardDB(),400);
+  }catch(e){
+    const msg=e.message||'خطا';
+    if(window.isPreviewOffline?.(msg,msg)) showToast('⚠️ در پیش‌نمایش فایل: برای ورود با رمز باید LIVE PREVIEW (3000) را باز کنی');
+    else showToast('❌ '+msg);
+  }
 }
 async function logout(){
   try{ await fetch('/api/auth/logout', {method:'POST', credentials:'include'}); }catch(e){}
@@ -1726,6 +1779,8 @@ verifyOTP = async function(){
 }
 document.getElementById('phoneInput').addEventListener('keydown',e=>{if(e.key==='Enter')sendOTP()})
 document.getElementById('otpInput').addEventListener('keydown',e=>{if(e.key==='Enter')verifyOTP()})
+document.getElementById('pwdInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')loginWithPassword()})
+document.getElementById('pwdPhoneInput')?.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('pwdInput').focus()})
 // auto logout after 30min demo: 5 min for preview
 let idleTimer; function resetIdle(){clearTimeout(idleTimer); idleTimer=setTimeout(()=>{if(isLogged){showToast('🔒 خروج خودکار برای امنیت'); setTimeout(()=>logout(),2000)}}, 30*60*1000)}; ['click','keydown'].forEach(ev=>document.addEventListener(ev,resetIdle)); resetIdle()
 // (removed simulate fake order — real orders come from DB only)

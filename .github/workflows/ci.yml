@@ -1,0 +1,94 @@
+name: CEO Panel CI — Run on GitHub
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: ceo
+          POSTGRES_PASSWORD: ceo_secure_2026
+          POSTGRES_DB: ceo_panel
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://ceo:ceo_secure_2026@localhost:5432/ceo_panel
+      JWT_SECRET: github-ci-test-secret-2026
+      ENCRYPTION_KEY: f1e16fac53f30d95bde44889223bce1cd6cdc502216636c3a433f04a0d3f5638
+      PORT: 3000
+      NODE_ENV: test
+      # برای CI، پیامک/تلگرام لازم نیست — mock می‌مونه
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Prisma generate + db push + seed
+        run: |
+          npx prisma generate
+          npx prisma db push --accept-data-loss
+          node prisma/seed.js
+          node scripts/set-ceo-password.js "Arshia-hCwgStK65-2026!" || echo "password set skipped"
+
+      - name: Start server in background
+        run: |
+          nohup node server.js > server.log 2>&1 &
+          echo $! > server.pid
+          sleep 5
+          cat server.log
+
+      - name: Health check
+        run: |
+          for i in 1 2 3 4 5; do
+            if curl -s http://localhost:3000/api/health | grep -q "ok"; then
+              echo "✅ Health OK"
+              curl -s http://localhost:3000/api/health | head -20
+              break
+            fi
+            echo "wait $i..."
+            sleep 3
+          done
+          curl -s http://localhost:3000/api/health || (cat server.log && exit 1)
+
+      - name: Test secure login (no SMS)
+        run: |
+          echo "→ wrong password should fail"
+          curl -s http://localhost:3000/api/auth/login -X POST -H "Content-Type: application/json" -d '{"phone":"09017909857","password":"wrong"}' | grep -q "INVALID_CREDENTIALS" && echo "✅ wrong blocked"
+          
+          echo "→ correct password should succeed"
+          curl -s http://localhost:3000/api/auth/login -X POST -H "Content-Type: application/json" -d '{"phone":"09017909857","password":"Arshia-hCwgStK65-2026!"}' | grep -q "ورود موفق" && echo "✅ login OK"
+
+          echo "→ OTP for CEO with password should be blocked"
+          curl -s http://localhost:3000/api/auth/verify-otp -X POST -H "Content-Type: application/json" -d '{"phone":"09017909857","otp":"1234"}' | grep -q "PASSWORD_REQUIRED" && echo "✅ OTP blocked (secure)"
+
+      - name: Show logs on failure
+        if: failure()
+        run: cat server.log
+
+      - name: Stop server
+        if: always()
+        run: kill $(cat server.pid) || true

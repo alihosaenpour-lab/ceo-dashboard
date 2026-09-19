@@ -1,0 +1,21 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # این Job بعد از CI موفق، می‌تونه به Vercel/Liara دیپلوی کنه
+    # فعلاً فقط Build تست می‌کنه — برای دیپلوی واقعی، VERCEL_TOKEN رو تو GitHub Secrets بذار
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - run: echo "✅ Build OK — برای دیپلوی اتومات به Vercel: Settings → Secrets → VERCEL_TOKEN اضافه کن"

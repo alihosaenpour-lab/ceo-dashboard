@@ -1,0 +1,9 @@
+{
+  "appId": "com.yourstore.ceopanel",
+  "appName": "پنل CEO",
+  "webDir": ".",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https"
+  }
+}
