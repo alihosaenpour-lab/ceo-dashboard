@@ -1127,5 +1127,6 @@
       ]
     }
   },
-  "count": 76
+  "count": 76,
+  "guide": "n8n-money-team/START-HERE.md"
 }
