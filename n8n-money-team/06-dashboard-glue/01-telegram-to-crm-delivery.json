@@ -1,0 +1,741 @@
+{
+  "id": "TeleCRMGlue00001",
+  "name": "01 — تلگرام → مشتری در CRM → پاسخ فروش خودکار",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "telegram-crm",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "966ea6ae-37f2-49ea-85df-6d90b607ef85",
+      "name": "Webhook Telegram",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// ─────────────────────────────────────────────────────────────\n//  ۱) اعتبارسنجی آپدیت تلگرام و ساخت بدنه‌ی ارسالی به CRM\n//     - پیام خودِ کانال (channel_post) مشتری نیست و رد می‌شود\n//     - پیام ربات‌ها رد می‌شود\n// ─────────────────────────────────────────────────────────────\nconst out = [];\nfor (const item of $input.all()) {\n  const j = item.json || {};\n  const body = (j.body && typeof j.body === 'object') ? j.body : j;\n\n  if (body.update_id === undefined || body.update_id === null) {\n    out.push({ json: { isCustomerMessage: false, skipReason: 'update_id ندارد', update_id: null } });\n    continue;\n  }\n\n  const msg = body.message || body.edited_message || null;\n  const isChannelBroadcast = !!body.channel_post && !body.message;\n\n  let from = null, chat = null, text = '', msgId = null, phone = null, isBot = false;\n  if (msg) {\n    from = msg.from || null;\n    chat = msg.chat || null;\n    text = msg.text || msg.caption || '';\n    msgId = msg.message_id;\n    isBot = !!(from && from.is_bot);\n    if (msg.contact && msg.contact.phone_number) phone = msg.contact.phone_number;\n    if (!text) {\n      if (msg.photo) text = '[عکس]';\n      else if (msg.voice) text = '[ویس]';\n      else if (msg.document) text = '[فایل]';\n      else if (msg.sticker) text = '[استیکر]';\n      else text = '[پیام]';\n    }\n  }\n\n  const isCustomerMessage = !!msg && !!from && !isBot && !isChannelBroadcast && String(text).trim().length > 0;\n  let skipReason = null;\n  if (!isCustomerMessage) {\n    if (isChannelBroadcast) skipReason = 'پست خودِ کانال است، مشتری نیست';\n    else if (isBot) skipReason = 'فرستنده ربات است';\n    else if (!msg) skipReason = 'این نوع آپدیت پیام ندارد';\n    else skipReason = 'پیام قابل پردازش نیست';\n  }\n\n  out.push({ json: {\n    isCustomerMessage,\n    skipReason,\n    update_id: String(body.update_id),\n    chatId: chat ? String(chat.id) : (from ? String(from.id) : null),\n    externalId: from ? String(from.id) : null,\n    username: (from && from.username) ? from.username : null,\n    name: from ? [from.first_name, from.last_name].filter(Boolean).join(' ') : null,\n    text: String(text),\n    phoneFromContact: phone,\n    messageId: msgId ? String(msgId) : null,\n    // بدنه‌ی دست‌نخورده‌ی تلگرام برای فوروارد به CRM\n    crmPayload: body,\n  }});\n}\nreturn out;\n"
+      },
+      "id": "ed57b2a5-b864-4ede-a1fa-18dca486f28e",
+      "name": "Normalize",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "3c3299c6-d5be-4036-95b8-d22ce2c41e7c",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.isCustomerMessage }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "id": "c51a50ad-a31a-4555-9b3e-3f05709aa721",
+      "name": "Is Customer",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, skipped: true, reason: $json.skipReason, update_id: $json.update_id }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "d7baa677-fd37-44b1-a955-041b15542fa7",
+      "name": "Respond Skip",
+      "type": "n8n-nodes-base.respondWith",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "method": "POST",
+        "url": "http://localhost:3000/api/integrations/telegram/webhook",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-Telegram-Bot-Api-Secret-Token",
+              "value": "CHANGE_ME_TELEGRAM_WEBHOOK_SECRET"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.crmPayload) }}"
+      },
+      "id": "eaebfec2-841b-4c6f-95af-14f7e8a57cff",
+      "name": "CRM Webhook",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// ─────────────────────────────────────────────────────────────\n//  ۲) خواندن پاسخ وبهوک CRM و تشخیص نیت خرید\n//     کلیدواژه‌ها دقیقاً همان‌هایی هستند که خود CRM چک می‌کند\n// ─────────────────────────────────────────────────────────────\nconst out = [];\nfor (const item of $input.all()) {\n  const res = item.json || {};\n  const statusCode = res.statusCode || 0;\n\n  let payload = res.body;\n  if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) { payload = {}; } }\n  payload = payload || {};\n\n  const src = $('Normalize').first().json;\n  const t = String(src.text || '').toLowerCase();\n\n  const intentPrice   = t.includes('قیمت') || t.includes('price') || t.includes('هزینه');\n  const intentStock   = t.includes('موجود') || t.includes('stock') || t.includes('موجودی');\n  const intentProduct = t.includes('محصول') || t.includes('خرید') || t.includes('سفارش') || t.includes('product');\n  const hot = intentPrice || intentStock || intentProduct;\n\n  const hasCustomer = !!payload.customerId;\n  const isDup = payload.duplicate === true;\n  out.push({ json: {\n    statusCode,\n    // موفق = ۲۰۰/۲۰۱ «و» (مشتری ساخته شده یا آپدیت تکراری است)\n    ok: (statusCode === 200 || statusCode === 201) && (hasCustomer || isDup),\n    duplicate: isDup,\n    received: payload.received === true,\n    customerId: payload.customerId || null,\n    messageId: payload.messageId || null,\n    leadId: payload.leadId || null,\n    crmError: payload.error || null,\n\n    text: src.text,\n    chatId: src.chatId,\n    name: src.name,\n    username: src.username,\n    phoneFromContact: src.phoneFromContact,\n    intent: { price: intentPrice, stock: intentStock, product: intentProduct },\n    hot,\n    tag: intentPrice ? 'استعلام قیمت'\n       : intentStock ? 'استعلام موجودی'\n       : intentProduct ? 'علاقه‌مند به خرید'\n       : 'پیام ورودی',\n  }});\n}\nreturn out;\n"
+      },
+      "id": "a1c56f1b-d3de-4a70-8ba9-b3ba634f10df",
+      "name": "Read CRM Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "1415d00d-ba40-41a4-9572-06347f1fa9fa",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.ok }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "id": "e66f9046-f6a4-4924-8254-ecc5372b3f86",
+      "name": "CRM OK",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1040,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, step: 'crm-webhook', statusCode: $json.statusCode, error: $json.crmError }) }}",
+        "options": {
+          "responseCode": 500
+        }
+      },
+      "id": "7cb10474-d000-47b1-a58f-62a1c76a704f",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondWith",
+      "typeVersion": 1.1,
+      "position": [
+        1040,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "4501d32f-09e0-4517-a110-ee1b1631fea5",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.duplicate }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "id": "e8325439-fdc0-495c-ae07-0c5dcf35aa1d",
+      "name": "Duplicate",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1280,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, duplicate: true, customerId: $json.customerId }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "c93c4b08-7d22-48b3-b68b-59bb12cdc897",
+      "name": "Respond Duplicate",
+      "type": "n8n-nodes-base.respondWith",
+      "typeVersion": 1.1,
+      "position": [
+        1280,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "method": "POST",
+        "url": "http://localhost:3000/api/auth/login",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\"phone\": \"CHANGE_ME_CEO_PHONE\", \"password\": \"CHANGE_ME_CEO_PASSWORD\"}"
+      },
+      "id": "6a00e659-2ec6-4f9e-a646-0e3b79db75b3",
+      "name": "CRM Login",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1520,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// ─────────────────────────────────────────────────────────────\n//  ۳) گرفتن توکن JWT برای بقیه‌ی درخواست‌ها\n// ─────────────────────────────────────────────────────────────\nconst out = [];\nfor (const item of $input.all()) {\n  const res = item.json || {};\n  let payload = res.body;\n  if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) { payload = {}; } }\n  payload = payload || (res.token ? res : {});\n  const crm = $('Read CRM Result').first().json;\n\n  out.push({ json: {\n    ...crm,\n    token: payload.token || null,\n    role: payload.role || null,\n    loginStatus: res.statusCode || 200,\n    loginOk: !!payload.token,\n  }});\n}\nreturn out;\n"
+      },
+      "id": "50ba816c-b2e0-4fd8-a41f-0c010a398855",
+      "name": "Read Login",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1760,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "unit": "seconds",
+        "amount": 7
+      },
+      "id": "25760384-ea98-436a-ac28-dc261b966759",
+      "name": "Wait Agent",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "method": "GET",
+        "url": "=http://localhost:3000/api/customers/{{ $('Read CRM Result').first().json.customerId }}/messages",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "8"
+            }
+          ]
+        }
+      },
+      "id": "e709c730-3241-4573-b5b8-b966e6635e17",
+      "name": "Fetch Messages",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2240,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "\n// ─────────────────────────────────────────────────────────────\n//  ۴) پیدا کردن پاسخِ ساخته‌شده توسط ایجنت داخلی CRM\n//     ایجنت CRM پاسخ را به‌صورت پیام OUTBOUND با metadata.via = 'agent' ذخیره می‌کند\n//     ولی آن را به تلگرام نمی‌فرستد — کارِ این ورک‌فلو همین است.\n// ─────────────────────────────────────────────────────────────\nconst out = [];\nfor (const item of $input.all()) {\n  const res = item.json || {};\n  let payload = res.body;\n  if (typeof payload === 'string') { try { payload = JSON.parse(payload); } catch (e) { payload = {}; } }\n  payload = payload || {};\n\n  const crm = $('Read CRM Result').first().json;\n  const login = $('Read Login').first().json;\n\n  const list = Array.isArray(payload.messages) ? payload.messages : [];\n  const inboundId = crm.messageId;\n  // پیام‌ها از جدید به قدیم مرتب‌اند\n  const agentMsg = list.find(m =>\n      m && m.direction === 'OUTBOUND' &&\n      ((m.metadata && m.metadata.via === 'agent') || (m.metadata && m.metadata.intent))\n  );\n  const newest = list.length ? list[0] : null;\n  const reply = agentMsg ? String(agentMsg.content || agentMsg.text || '').trim() : '';\n\n  out.push({ json: {\n    ...crm,\n    token: login.token,\n    messagesSeen: list.length,\n    agentReplyId: agentMsg ? agentMsg.id : null,\n    reply,\n    hasReply: reply.length > 0,\n    newestDirection: newest ? newest.direction : null,\n    fetchStatus: res.statusCode || 0,\n  }});\n}\nreturn out;\n"
+      },
+      "id": "e4b6328e-7cdc-49af-a0ce-88aaa3eb2132",
+      "name": "Pick Reply",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2480,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {},
+        "conditions": {
+          "options": {
+            "version": 2,
+            "leftValue": "",
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "8ad1c6b7-b31f-4e4c-a4ac-c9a33cd63291",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.hasReply }}",
+              "rightValue": ""
+            }
+          ]
+        }
+      },
+      "id": "996c7102-1ca9-4638-a051-269ed8350edf",
+      "name": "Has Reply",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2720,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, replied: false, reason: 'پاسخ ایجنت هنوز آماده نشده — ورک‌فلو را با Wait بیشتر یا اجرای دوباره تست کن', customerId: $json.customerId, messagesSeen: $json.messagesSeen }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "68ef24f2-d731-48fe-87b3-4c20a28a7425",
+      "name": "Respond NoReply",
+      "type": "n8n-nodes-base.respondWith",
+      "typeVersion": 1.1,
+      "position": [
+        2720,
+        520
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "method": "POST",
+        "url": "http://localhost:3000/api/integrations/telegram/send",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ customerId: $json.customerId, text: $json.reply }) }}"
+      },
+      "id": "e2bb74b7-6549-46d0-89ff-fef2034f2835",
+      "name": "Send Telegram",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        2960,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          }
+        },
+        "method": "POST",
+        "url": "=http://localhost:3000/api/customers/{{ $('Pick Reply').first().json.customerId }}/tags",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $('Read Login').first().json.token }}"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ name: $('Pick Reply').first().json.tag }) }}"
+      },
+      "id": "912d0af0-08e4-4ced-97f2-e60afe76fd9b",
+      "name": "Tag Customer",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        3200,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, replied: true, customerId: $('Pick Reply').first().json.customerId, leadId: $('Pick Reply').first().json.leadId, tag: $('Pick Reply').first().json.tag, replyPreview: String($('Pick Reply').first().json.reply || '').slice(0, 80), providerMessageId: (($('Send Telegram').first().json.body || {}).providerMessageId) || null, telegramSentOk: $('Send Telegram').first().json.statusCode === 200, tagApplied: ($('Tag Customer').first().json.statusCode === 201 || $('Tag Customer').first().json.statusCode === 409) }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "b8431f01-2d9e-4d89-80bb-e3eed78c7fff",
+      "name": "Respond Done",
+      "type": "n8n-nodes-base.respondWith",
+      "typeVersion": 1.1,
+      "position": [
+        3440,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## ✨ این ورک‌فلو چه کار می‌کند؟\n\nپل بین **تلگرام** و **CRM خودت** است:\n\n1. پیام مشتری از تلگرام می‌رسد\n2. به وبهوک CRM می‌رود → مشتری + پیام + لید ساخته می‌شود\n3. ایجنت داخلی CRM پاسخ فروش را می‌سازد (و در دیتابیس ذخیره می‌کند)\n4. این ورک‌فلو آن پاسخ را برمی‌دارد و **در تلگرام برای مشتری می‌فرستد**\n5. بر اساس نیت خرید، برچسب می‌زند (استعلام قیمت / موجودی / خرید)\n\n> نکته: ایجنت CRM پاسخ را ذخیره می‌کند ولی تحویل نمی‌دهد — این ورک‌فلو دقیقاً همان جای خالی را پر می‌کند.",
+        "height": 260,
+        "width": 900,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        60,
+        60
+      ],
+      "id": "ed719c8e-3cc6-4a10-b774-c765d76ce555",
+      "name": "[NOTE] 31529"
+    },
+    {
+      "parameters": {
+        "content": "## ⚙️ قبل از فعال‌سازی این ۴ جا را پر کن\n\n1. `CRM Webhook` و همه‌ی گره‌های HTTP: به‌جای `http://localhost:3000` آدرس واقعی داشبوردت را بگذار\n2. هدر `X-Telegram-Bot-Api-Secret-Token` = همان `TELEGRAM_WEBHOOK_SECRET` در فایل `.env` داشبورد\n3. گره `CRM Login`: شماره و رمز CEO (همان که با `/api/auth/login` وارد می‌شوی)\n4. مسیر وبهوک این ورک‌فلو (`telegram-crm`) را در تلگرام ثبت کن:\n```\ncurl -X POST \"https://api.telegram.org/bot<TOKEN>/setWebhook\" \\\n  -d \"url=https://<n8n-تو>/webhook/telegram-crm\" \\\n  -d \"secret_token=<همان سکرت>\"\n```\n\n⏱ اگر ایجنت CRM کند بود، مقدار `Wait Agent` (۷ ثانیه) را بیشتر کن.",
+        "height": 320,
+        "width": 900,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        60,
+        380
+      ],
+      "id": "a06bb57f-c750-4882-ba60-ce066f845d25",
+      "name": "[NOTE] 34726"
+    }
+  ],
+  "connections": {
+    "Webhook Telegram": {
+      "main": [
+        [
+          {
+            "node": "Normalize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize": {
+      "main": [
+        [
+          {
+            "node": "Is Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Customer": {
+      "main": [
+        [
+          {
+            "node": "CRM Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Skip",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Webhook": {
+      "main": [
+        [
+          {
+            "node": "Read CRM Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read CRM Result": {
+      "main": [
+        [
+          {
+            "node": "CRM OK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM OK": {
+      "main": [
+        [
+          {
+            "node": "Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Duplicate": {
+      "main": [
+        [
+          {
+            "node": "Respond Duplicate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "CRM Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CRM Login": {
+      "main": [
+        [
+          {
+            "node": "Read Login",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Login": {
+      "main": [
+        [
+          {
+            "node": "Wait Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Agent": {
+      "main": [
+        [
+          {
+            "node": "Fetch Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Messages": {
+      "main": [
+        [
+          {
+            "node": "Pick Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pick Reply": {
+      "main": [
+        [
+          {
+            "node": "Has Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Reply": {
+      "main": [
+        [
+          {
+            "node": "Send Telegram",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond NoReply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Telegram": {
+      "main": [
+        [
+          {
+            "node": "Tag Customer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tag Customer": {
+      "main": [
+        [
+          {
+            "node": "Respond Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "pinData": {},
+  "versionId": "fe1ef005-2685-4af6-a724-85dda0f9d247",
+  "tags": []
+}
