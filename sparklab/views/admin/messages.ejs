@@ -1,0 +1,41 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title"><h1>پیام‌های فرم تماس</h1></div>
+      <% messages.forEach(function (m) { %>
+        <div class="card mb-2 <%= m.is_read ? '' : '' %>" style="<%= m.is_read ? '' : 'border-color:rgba(34,211,238,.4)' %>">
+          <div class="flex-between wrap">
+            <div>
+              <b><%= m.subject || '(بدون موضوع)' %></b>
+              <% if (!m.is_read) { %><span class="pill pill-cyan">جدید</span><% } %>
+              <div class="tiny faint"><%= m.name %> — <span style="direction:ltr;display:inline-block"><%= m.email %></span><%= m.phone ? ' — ' + m.phone : '' %> · <%= h.fmtDate(m.created_at) %></div>
+            </div>
+            <div class="flex" style="gap:.4rem">
+              <% if (!m.is_read) { %>
+                <form method="POST" action="/admin/content/messages/<%= m.id %>/read">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-ghost btn-sm" type="submit">خوانده‌شده</button>
+                </form>
+              <% } %>
+              <form method="POST" action="/admin/content/messages/<%= m.id %>/delete" data-confirm="حذف این پیام؟">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <button class="btn btn-danger btn-sm" type="submit">حذف</button>
+              </form>
+            </div>
+          </div>
+          <p class="small muted mt-2" style="white-space:pre-line;background:var(--bg-1);padding:.9rem;border-radius:10px"><%= m.body %></p>
+        </div>
+      <% }); %>
+      <% if (!messages.length) { %><p class="small muted">پیامی دریافت نشده است.</p><% } %>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

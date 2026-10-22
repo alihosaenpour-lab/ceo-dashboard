@@ -1,0 +1,87 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="panel-layout">
+    <%- include('../partials/account-side') %>
+    <main class="panel-main">
+      <div class="panel-title">
+        <h1>سلام <%= currentUser.name.split(' ')[0] %> 👋</h1>
+        <div class="flex">
+          <a class="btn btn-primary btn-sm" href="/shop">خرید محصول</a>
+          <a class="btn btn-ghost btn-sm" href="/projects/new">ثبت پروژه جدید</a>
+        </div>
+      </div>
+
+      <div class="stat-grid mb-3">
+        <div class="card stat-card"><span class="sc-label">کل سفارش‌ها</span><span class="sc-value"><%= h.fmtMoney(stats.orders) %></span></div>
+        <div class="card stat-card accent"><span class="sc-label">پرداخت‌شده</span><span class="sc-value"><%= h.fmtMoney(stats.paidOrders) %></span></div>
+        <div class="card stat-card"><span class="sc-label">پروژه‌های ثبت‌شده</span><span class="sc-value"><%= h.fmtMoney(stats.projects) %></span></div>
+        <div class="card stat-card"><span class="sc-label">فایل فعال</span><span class="sc-value"><%= h.fmtMoney(grants.length) %></span></div>
+      </div>
+
+      <% if (grants.length) { %>
+        <div class="card mb-3">
+          <div class="flex-between mb-2">
+            <h2 class="h3">دانلودهای در دسترس</h2>
+            <a class="small" href="/account/downloads">همه دانلودها</a>
+          </div>
+          <% grants.slice(0, 3).forEach(function (g) { %>
+            <div class="flex-between" style="padding:.7rem 0;border-bottom:1px dashed var(--border)">
+              <div>
+                <b class="small"><%= g.product_title %></b>
+                <div class="tiny faint">نسخه <%= g.version %> — انقضا لینک: <%= h.fmtDate(g.expires_at) %></div>
+              </div>
+              <a class="btn btn-outline btn-sm" href="/download/<%= g.token %>">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                دانلود
+              </a>
+            </div>
+          <% }); %>
+        </div>
+      <% } %>
+
+      <div class="grid grid-2" style="align-items:start">
+        <div class="card">
+          <div class="flex-between mb-2">
+            <h2 class="h3">آخرین سفارش‌ها</h2>
+            <a class="small" href="/account/orders">همه</a>
+          </div>
+          <% if (!orders.length) { %>
+            <p class="small muted">هنوز سفارشی ثبت نکرده‌اید. <a href="/shop">فروشگاه را ببینید</a>.</p>
+          <% } else { orders.forEach(function (o) { %>
+            <a href="/account/orders/<%= o.order_no %>" class="flex-between" style="padding:.7rem 0;border-bottom:1px dashed var(--border);color:var(--text)">
+              <span>
+                <b class="small" style="direction:ltr;display:inline-block"><%= o.order_no %></b>
+                <span class="tiny faint"> · <%= h.fmtDate(o.created_at) %></span>
+              </span>
+              <span class="flex">
+                <b class="small"><%= h.fmtMoney(o.total) %> <%= o.currency %></b>
+                <span class="status <%= h.statusClass(o.status) %>"><%= h.statusLabel(o.status) %></span>
+              </span>
+            </a>
+          <% }); } %>
+        </div>
+        <div class="card">
+          <div class="flex-between mb-2">
+            <h2 class="h3">پروژه‌های فعال</h2>
+            <a class="small" href="/account/projects">همه</a>
+          </div>
+          <% if (!projects.length) { %>
+            <p class="small muted">پروژه‌ای ثبت نکرده‌اید. <a href="/projects/new">اولین درخواست خود را ثبت کنید</a>.</p>
+          <% } else { projects.forEach(function (p) { %>
+            <a href="/account/projects/<%= p.id %>" class="flex-between" style="padding:.7rem 0;border-bottom:1px dashed var(--border);color:var(--text)">
+              <span>
+                <b class="small"><%= p.title %></b>
+                <span class="tiny faint"> · <%= h.fmtDate(p.created_at) %></span>
+              </span>
+              <span class="status <%= h.statusClass(p.status) %>"><%= h.statusLabel(p.status) %></span>
+            </a>
+          <% }); } %>
+        </div>
+      </div>
+    </main>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

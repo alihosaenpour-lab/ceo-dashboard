@@ -1,0 +1,50 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side', { sideCounts: { openProjects: counts.all - counts.completed - counts.rejected - counts.cancelled } }) %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <div class="flex wrap" style="gap:.4rem">
+          <a class="btn btn-sm <%= !status ? 'btn-primary' : 'btn-ghost' %>" href="/admin/projects">همه (<%= h.fmtMoney(counts.all) %>)</a>
+          <a class="btn btn-sm <%= status === 'received' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/projects?status=received">جدید (<%= h.fmtMoney(counts.received) %>)</a>
+          <a class="btn btn-sm <%= status === 'estimating' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/projects?status=estimating">برآورد (<%= h.fmtMoney(counts.estimating) %>)</a>
+          <a class="btn btn-sm <%= status === 'in_progress' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/projects?status=in_progress">در حال اجرا (<%= h.fmtMoney(counts.in_progress) %>)</a>
+          <a class="btn btn-sm <%= status === 'completed' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/projects?status=completed">تکمیل (<%= h.fmtMoney(counts.completed) %>)</a>
+        </div>
+        <form method="GET" action="/admin/projects" class="search-inline">
+          <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="search" name="q" value="<%= q %>" placeholder="کد پیگیری، عنوان، نام…">
+        </form>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>کد</th><th>عنوان</th><th>متقاضی</th><th>نوع</th><th>بودجه</th><th>برآورد</th><th>تاریخ</th><th>وضعیت</th><th></th></tr></thead>
+          <tbody>
+            <% projects.forEach(function (p) { %>
+              <tr>
+                <td class="num" style="direction:ltr;text-align:right"><a href="/admin/projects/<%= p.id %>"><b><%= p.ref_no %></b></a></td>
+                <td class="small"><%= p.title %></td>
+                <td class="small"><%= p.name %><br><span class="tiny faint" style="direction:ltr;display:inline-block"><%= p.phone || p.email %></span></td>
+                <td class="tiny"><%= p.project_type %></td>
+                <td class="tiny"><%= p.budget_range || '—' %></td>
+                <td class="num small"><%= p.estimate_amount ? h.fmtMoney(p.estimate_amount) : '—' %></td>
+                <td class="tiny"><%= h.fmtDate(p.created_at) %></td>
+                <td><span class="status <%= h.statusClass(p.status) %>"><%= h.statusLabel(p.status) %></span></td>
+                <td><a class="btn btn-ghost btn-sm" href="/admin/projects/<%= p.id %>">مدیریت</a></td>
+              </tr>
+            <% }); %>
+            <% if (!projects.length) { %><tr><td colspan="9" class="small muted text-center" style="padding:2rem">درخواستی یافت نشد.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

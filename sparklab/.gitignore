@@ -1,0 +1,10 @@
+node_modules/
+data/
+.env
+*.log
+
+# private storage is never committed — EXCEPT the reproducible seed packages
+storage/private/attachments/
+storage/private/files/*
+!storage/private/files/seed-*.zip
+storage/public-uploads/

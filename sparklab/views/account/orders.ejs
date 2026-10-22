@@ -1,0 +1,40 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="panel-layout">
+    <%- include('../partials/account-side') %>
+    <main class="panel-main">
+      <div class="panel-title"><h1>سفارش‌های من</h1></div>
+      <% if (!orders.length) { %>
+        <div class="card empty-state">
+          <h3 class="mb-1">سفارشی ندارید</h3>
+          <p class="mb-3">محصولات دیجیتال آماده را در فروشگاه ببینید.</p>
+          <a class="btn btn-primary" href="/shop">رفتن به فروشگاه</a>
+        </div>
+      <% } else { %>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead>
+              <tr><th>شماره سفارش</th><th>تاریخ</th><th>اقلام</th><th>مبلغ</th><th>وضعیت</th><th></th></tr>
+            </thead>
+            <tbody>
+              <% orders.forEach(function (o) { %>
+                <tr>
+                  <td class="num" style="direction:ltr;text-align:right"><b><%= o.order_no %></b></td>
+                  <td class="tiny"><%= h.fmtDate(o.created_at) %></td>
+                  <td class="small"><%= o.items.map(function (i) { return i.title; }).join('، ') %></td>
+                  <td class="num"><b><%= h.fmtMoney(o.total) %></b> <span class="tiny faint"><%= o.currency %></span></td>
+                  <td><span class="status <%= h.statusClass(o.status) %>"><%= h.statusLabel(o.status) %></span></td>
+                  <td><a class="btn btn-ghost btn-sm" href="/account/orders/<%= o.order_no %>">جزئیات</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </main>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

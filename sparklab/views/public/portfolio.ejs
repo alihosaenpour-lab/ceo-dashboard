@@ -1,0 +1,39 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><span>نمونه‌کارها</span></nav>
+    <h1>نمونه‌کارها</h1>
+    <p>پروژه‌هایی که برای کسب‌وکارهای ایرانی ساخته‌ایم — با شرح مسئله، راه‌حل و نتیجه.</p>
+  </div>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container">
+    <% if (!items.length) { %>
+      <div class="card empty-state"><h3>به‌زودی نمونه‌کارهای جدید منتشر می‌شود</h3></div>
+    <% } else { %>
+      <div class="grid grid-2">
+        <% items.forEach(function (w) { %>
+          <a class="card card-hover work-card reveal" href="/portfolio/<%= w.slug %>" style="text-decoration:none">
+            <div class="wc-media"><img src="<%= w.cover_image %>" alt="<%= w.title %>" loading="lazy"></div>
+            <div class="wc-body">
+              <span class="pc-cat"><%= w.client_label %></span>
+              <h3 class="pc-title" style="color:var(--text);font-size:1.15rem"><%= w.title %></h3>
+              <p class="pc-summary" style="-webkit-line-clamp:3"><%= w.summary %></p>
+              <% if (w.tech && w.tech.length) { %>
+                <div class="tech-chips">
+                  <% w.tech.slice(0, 5).forEach(function (t) { %><span class="chip"><%= t %></span><% }); %>
+                </div>
+              <% } %>
+              <% if (w.result_metric) { %><p class="small mt-2" style="color:var(--ok)">▲ <%= w.result_metric %></p><% } %>
+            </div>
+          </a>
+        <% }); %>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

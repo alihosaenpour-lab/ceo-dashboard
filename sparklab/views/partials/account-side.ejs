@@ -1,0 +1,40 @@
+<aside class="panel-side">
+  <div class="card">
+    <div class="ps-user flex">
+      <span class="ps-avatar"><%= currentUser.name.trim().charAt(0) %></span>
+      <span style="min-width:0">
+        <b class="small" style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><%= currentUser.name %></b>
+        <span class="tiny faint"><%= currentUser.role === 'customer' ? 'مشتری' : (currentUser.role === 'admin' ? 'مدیر' : 'کارشناس') %></span>
+      </span>
+    </div>
+    <a class="ps-link <%= currentPath === '/account' ? 'active' : '' %>" href="/account">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+      پیشخوان
+    </a>
+    <a class="ps-link <%= currentPath.startsWith('/account/orders') ? 'active' : '' %>" href="/account/orders">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+      سفارش‌ها
+    </a>
+    <a class="ps-link <%= currentPath.startsWith('/account/downloads') ? 'active' : '' %>" href="/account/downloads">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+      دانلودها
+    </a>
+    <a class="ps-link <%= currentPath.startsWith('/account/projects') ? 'active' : '' %>" href="/account/projects">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      پروژه‌های من
+    </a>
+    <a class="ps-link <%= currentPath.startsWith('/account/notifications') ? 'active' : '' %>" href="/account/notifications">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+      اعلان‌ها <% if (unreadNotifications) { %><span class="cnt"><%= h.fmtMoney(unreadNotifications) %></span><% } %>
+    </a>
+    <a class="ps-link <%= currentPath.startsWith('/account/profile') ? 'active' : '' %>" href="/account/profile">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      تنظیمات حساب
+    </a>
+    <hr class="divider" style="margin:.7rem 0">
+    <form method="POST" action="/auth/logout" style="padding:0 .4rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-danger btn-sm btn-block" type="submit">خروج از حساب</button>
+    </form>
+  </div>
+</aside>

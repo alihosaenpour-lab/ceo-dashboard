@@ -1,0 +1,132 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<%
+  const flowLabels = { received: 'دریافت', reviewing: 'بررسی', estimating: 'برآورد', approved: 'تأیید', in_progress: 'اجرا', delivered: 'تحویل', completed: 'تکمیل' };
+  const idx = flow.indexOf(project.status);
+%>
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1 class="flex" style="gap:.7rem;flex-wrap:wrap"><%= project.title %>
+          <span class="status <%= h.statusClass(project.status) %>"><%= h.statusLabel(project.status) %></span>
+        </h1>
+        <span class="tiny faint">کد: <b style="direction:ltr;display:inline-block"><%= project.ref_no %></b> · ثبت: <%= h.fmtDate(project.created_at) %></span>
+      </div>
+
+      <div class="card mb-3">
+        <div class="timeline">
+          <% flow.forEach(function (s, i) { %>
+            <div class="tl-step <%= idx > i ? 'done' : '' %> <%= idx === i ? 'current done' : '' %>"><%= flowLabels[s] %></div>
+          <% }); %>
+        </div>
+        <% if (['rejected','cancelled'].includes(project.status)) { %>
+          <div class="alert bad"><span>پروژه با وضعیت «<%= h.statusLabel(project.status) %>» بسته شده است.</span></div>
+        <% } %>
+      </div>
+
+      <div class="grid grid-2" style="grid-template-columns:1fr 380px;align-items:start">
+        <div>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">شرح درخواست مشتری</h2>
+            <dl class="kv">
+              <dt>متقاضی</dt><dd><%= project.name %> — <span style="direction:ltr;display:inline-block"><%= project.phone || '' %></span> — <%= project.email %><%= user ? ' (کاربر #' + user.id + ')' : ' (مهمان)' %></dd>
+              <dt>نوع پروژه</dt><dd><%= types[project.project_type] || project.project_type %></dd>
+              <dt>بودجه اعلامی</dt><dd><%= project.budget_range || '—' %></dd>
+              <dt>زمان مورد انتظار</dt><dd><%= project.timeline || '—' %></dd>
+            </dl>
+            <p class="small muted mt-2" style="white-space:pre-line;background:var(--bg-1);padding:1rem;border-radius:12px"><%= project.description %></p>
+            <% if (project.attachments && project.attachments.length) { %>
+              <b class="small">پیوست‌ها:</b>
+              <div class="mt-1">
+                <% project.attachments.forEach(function (a, i) { %>
+                  <a class="btn btn-ghost btn-sm mt-1" href="/admin/projects/<%= project.id %>/attachment/<%= i %>">📎 <%= a.name %> (<%= h.fmtMoney(Math.round(a.size/1024)) %>KB)</a>
+                <% }); %>
+              </div>
+            <% } %>
+          </div>
+
+          <div class="card">
+            <h2 class="h3 mb-2">گفت‌وگو با مشتری</h2>
+            <div class="chat mb-3" id="chat">
+              <% messages.forEach(function (m) { %>
+                <div class="msg <%= m.sender_role %><%= m.is_internal ? ' internal' : '' %>">
+                  <%= m.body %>
+                  <% if (m.attachment_name) { %>
+                    <div class="mt-1"><a class="small" href="/admin/projects/<%= project.id %>/message/<%= m.id %>/attachment">📎 <%= m.attachment_name %></a></div>
+                  <% } %>
+                  <span class="msg-meta"><%= m.is_internal ? '🔒 یادداشت داخلی' : (m.sender_role === 'admin' ? 'تیم اسپارک لب' : 'مشتری') %> · <%= h.fmtDate(m.created_at) %></span>
+                </div>
+              <% }); %>
+            </div>
+            <form method="POST" action="/admin/projects/<%= project.id %>/message?_csrf=<%= csrfToken %>" enctype="multipart/form-data">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <textarea class="textarea" name="body" placeholder="پاسخ به مشتری…" style="min-height:80px"></textarea>
+              </div>
+              <div class="flex-between wrap" style="gap:.7rem">
+                <div class="flex" style="gap:.8rem;flex-wrap:wrap">
+                  <input type="file" name="attachment" class="tiny" accept=".zip,.rar,.7z,.pdf,.txt,.png,.jpg,.jpeg,.doc,.docx">
+                  <label class="check-row tiny"><input type="checkbox" name="is_internal" value="1"> یادداشت داخلی (برای مشتری نمایش داده نشود)</label>
+                </div>
+                <button class="btn btn-primary btn-sm" type="submit">ارسال</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <aside>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">تغییر وضعیت</h2>
+            <form method="POST" action="/admin/projects/<%= project.id %>/status">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <label class="form-label">وضعیت</label>
+                <select class="select" name="status">
+                  <% allStatuses.forEach(function (s) { %>
+                    <option value="<%= s %>" <%= project.status === s ? 'selected' : '' %>><%= h.statusLabel(s) %></option>
+                  <% }); %>
+                </select>
+                <span class="form-hint">گردش کار: حرکت رو به جلو یک مرحله‌ای مجاز است؛ رد/لغو فقط از مراحل اولیه.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">یادداشت (به مشتری اطلاع داده می‌شود)</label>
+                <input class="input" name="note" maxlength="300">
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">ثبت وضعیت</button>
+            </form>
+          </div>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">برآورد هزینه</h2>
+            <form method="POST" action="/admin/projects/<%= project.id %>/estimate">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <label class="form-label">مبلغ برآورد (تومان)</label>
+                <input class="input" name="estimate_amount" type="number" min="0" value="<%= project.estimate_amount || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">توضیح برآورد / فازبندی</label>
+                <textarea class="textarea" name="estimate_note" style="min-height:90px"><%= project.estimate_note || '' %></textarea>
+              </div>
+              <button class="btn btn-outline btn-block" type="submit">ثبت و اطلاع به مشتری</button>
+            </form>
+          </div>
+          <% if (project.admin_notes) { %>
+            <div class="card">
+              <h2 class="h3 mb-2">یادداشت‌های داخلی</h2>
+              <pre class="tiny faint" style="white-space:pre-wrap;font-family:inherit"><%= project.admin_notes %></pre>
+            </div>
+          <% } %>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+<script nonce="<%= cspNonce %>">var c=document.getElementById('chat'); if(c) c.scrollTop=c.scrollHeight;</script>
+</body>
+</html>

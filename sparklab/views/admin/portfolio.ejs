@@ -1,0 +1,73 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1>نمونه‌کارها</h1>
+      </div>
+      <div class="grid grid-2 mb-3" style="grid-template-columns:380px 1fr;align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-3">نمونه‌کار جدید</h2>
+          <form method="POST" action="/admin/content/portfolio/new?_csrf=<%= csrfToken %>" enctype="multipart/form-data">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-group">
+              <label class="form-label">عنوان <span class="req">*</span></label>
+              <input class="input" name="title" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">نشانی (slug)</label>
+              <input class="input" name="slug" dir="ltr" style="text-align:left" placeholder="auto">
+            </div>
+            <div class="form-group">
+              <label class="form-label">خلاصه</label>
+              <textarea class="textarea" name="summary" style="min-height:70px"></textarea>
+            </div>
+            <div class="form-group">
+              <label class="form-label">تصویر کاور</label>
+              <div class="file-drop"><input type="file" name="cover" accept=".jpg,.jpeg,.png,.webp,.svg"></div>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">ایجاد و تکمیل جزئیات</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>پروژه</th><th>کارفرما</th><th>ترتیب</th><th>وضعیت</th><th></th></tr></thead>
+            <tbody>
+              <% items.forEach(function (w) { %>
+                <tr>
+                  <td>
+                    <div class="flex" style="gap:.7rem">
+                      <% if (w.cover_image) { %><img src="<%= w.cover_image %>" alt="" style="width:64px;height:40px;border-radius:8px;object-fit:cover"><% } %>
+                      <a href="/admin/content/portfolio/<%= w.id %>/edit" style="font-weight:700"><%= w.title %></a>
+                    </div>
+                  </td>
+                  <td class="small"><%= w.client_label || '—' %></td>
+                  <td class="num"><%= h.fmtMoney(w.sort_order) %></td>
+                  <td><span class="status <%= w.is_active ? 'ok' : 'muted' %>"><%= w.is_active ? 'منتشر' : 'پیش‌نویس' %></span></td>
+                  <td>
+                    <div class="flex" style="gap:.35rem">
+                      <a class="btn btn-ghost btn-sm" href="/admin/content/portfolio/<%= w.id %>/edit">ویرایش</a>
+                      <form method="POST" action="/admin/content/portfolio/<%= w.id %>/delete" data-confirm="حذف نمونه‌کار «<%= w.title %>»؟">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-danger btn-sm" type="submit">حذف</button>
+                      </form>
+                    </div>
+                  </td>
+                </tr>
+              <% }); %>
+              <% if (!items.length) { %><tr><td colspan="5" class="small muted text-center" style="padding:2rem">نمونه‌کاری ثبت نشده است.</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

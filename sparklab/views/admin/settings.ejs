@@ -1,0 +1,215 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="grid grid-2" style="grid-template-columns:1fr 1fr;align-items:start">
+
+        <!-- Gateway -->
+        <div class="card mb-3" style="grid-column:1/-1;border-color:<%= gw.connected && !gw.test ? 'rgba(52,211,153,.4)' : (gw.test ? 'rgba(251,191,36,.4)' : 'rgba(248,113,113,.45)') %>">
+          <h2 class="h3 mb-1">درگاه پرداخت</h2>
+          <p class="small muted mb-3">
+            وضعیت فعلی:
+            <% if (gw.test) { %><span class="status warn"><%= gw.label %></span> — <%= gw.detail %>
+            <% } else if (gw.connected) { %><span class="status ok"><%= gw.label %></span> — <%= gw.detail %>
+            <% } else { %><span class="status bad">متصل نیست</span> — <%= gw.detail %>
+            <% } %>
+          </p>
+          <form method="POST" action="/admin/settings/gateway">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label" for="gateway-active">درگاه فعال</label>
+                <select class="select" id="gateway-active" name="active">
+                  <option value="none" <%= s['gateway.active'] === 'none' ? 'selected' : '' %>>هیچ (خرید مسدود — تا اتصال درگاه واقعی)</option>
+                  <option value="zarinpal" <%= s['gateway.active'] === 'zarinpal' ? 'selected' : '' %>>زرین‌پال</option>
+                  <option value="test" <%= s['gateway.active'] === 'test' ? 'selected' : '' %>>درگاه آزمایشی محلی (فقط تست)</option>
+                </select>
+              </div>
+              <div class="form-group hidden" id="zarinpal-block">
+                <div class="form-row">
+                  <div class="form-group" style="margin:0">
+                    <label class="form-label" for="zp-merchant">شناسه پذیرنده زرین‌پال (Merchant ID)</label>
+                    <input class="input" id="zp-merchant" name="zarinpal_merchant_id" dir="ltr" style="text-align:left;font-family:monospace" value="<%= s['gateway.zarinpal.merchant_id'] || '' %>" placeholder="xxxxxxxx-xxxx-…">
+                    <span class="form-hint">به‌صورت رمزنگاری‌شده در پایگاه داده ذخیره می‌شود و هرگز به مرورگر ارسال نمی‌گردد.</span>
+                  </div>
+                  <div class="form-group" style="margin:0">
+                    <label class="form-label">حالت</label>
+                    <select class="select" name="zarinpal_mode">
+                      <option value="sandbox" <%= s['gateway.zarinpal.mode'] !== 'production' ? 'selected' : '' %>>سندباکس (تست زرین‌پال)</option>
+                      <option value="production" <%= s['gateway.zarinpal.mode'] === 'production' ? 'selected' : '' %>>عملیاتی (پرداخت واقعی)</option>
+                    </select>
+                    <span class="form-hint">حالت عملیاتی فقط روی دامنه ثبت‌شده در پنل زرین‌پال کار می‌کند.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="form-group hidden" id="test-gateway-block" style="grid-column:1/-1">
+                <div class="alert warn"><span>درگاه آزمایشی فقط برای تست چرخه سفارش در محیط توسعه است. تراکنش‌ها با برچسب «آزمایشی» ثبت می‌شوند و پولی جابه‌جا نمی‌شود. پیش از انتشار حتماً روی «هیچ» یا «زرین‌پال» قرار دهید.</span></div>
+                <label class="check-row mt-2"><input type="checkbox" name="test_enabled" value="1" <%= s['gateway.test.enabled'] !== '0' ? 'checked' : '' %>> درگاه آزمایشی فعال بماند</label>
+              </div>
+            </div>
+            <button class="btn btn-primary" type="submit">ذخیره تنظیمات درگاه</button>
+          </form>
+          <div class="flex mt-2" style="gap:.5rem;flex-wrap:wrap">
+            <form method="POST" action="/admin/settings/gateway/test-connection">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="gateway" value="zarinpal">
+              <button class="btn btn-outline btn-sm" type="submit">آزمون اتصال به زرین‌پال</button>
+            </form>
+            <form method="POST" action="/admin/settings/gateway/test-connection">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <input type="hidden" name="gateway" value="test">
+              <button class="btn btn-ghost btn-sm" type="submit">بررسی درگاه آزمایشی</button>
+            </form>
+          </div>
+          <p class="tiny faint mt-2">تأیید پرداخت همیشه سمت سرور انجام می‌شود (استعلام verify از درگاه + کنترل مبلغ و شناسه سفارش + جلوگیری از تأیید تکراری). تا تأیید معتبر، سفارش «پرداخت‌شده» نمی‌شود و فایل تحویل داده نمی‌شود.</p>
+        </div>
+
+        <!-- Site info -->
+        <div class="card mb-3">
+          <h2 class="h3 mb-3">اطلاعات سایت و کسب‌وکار</h2>
+          <form method="POST" action="/admin/settings/site">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">نام برند (لاتین)</label>
+                <input class="input" name="site.name" value="<%= s['site.name'] || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">نام برند (فارسی)</label>
+                <input class="input" name="site.name_fa" value="<%= s['site.name_fa'] || '' %>">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">شعار برند</label>
+              <input class="input" name="site.tagline" value="<%= s['site.tagline'] || '' %>">
+            </div>
+            <div class="form-group">
+              <label class="form-label">توضیح سایت (برای فوتر و سئو)</label>
+              <textarea class="textarea" name="site.description" style="min-height:80px"><%= s['site.description'] || '' %></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">تلفن</label>
+                <input class="input" name="contact.phone" value="<%= s['contact.phone'] || '' %>" dir="ltr" style="text-align:left">
+              </div>
+              <div class="form-group">
+                <label class="form-label">ایمیل</label>
+                <input class="input" name="contact.email" value="<%= s['contact.email'] || '' %>" dir="ltr" style="text-align:left">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">آدرس</label>
+              <input class="input" name="contact.address" value="<%= s['contact.address'] || '' %>">
+            </div>
+            <div class="form-group">
+              <label class="form-label">ساعات کاری</label>
+              <input class="input" name="contact.workhours" value="<%= s['contact.workhours'] || '' %>">
+            </div>
+            <div class="form-group">
+              <label class="form-label">واحد پول</label>
+              <input class="input" name="order.currency" value="<%= s['order.currency'] || 'تومان' %>" style="max-width:150px">
+            </div>
+            <hr class="divider">
+            <h3 class="h3 small mb-2">شبکه‌های اجتماعی</h3>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label tiny">اینستاگرام</label><input class="input" name="social.instagram" value="<%= s['social.instagram'] || '' %>" dir="ltr" style="text-align:left"></div>
+              <div class="form-group"><label class="form-label tiny">تلگرام</label><input class="input" name="social.telegram" value="<%= s['social.telegram'] || '' %>" dir="ltr" style="text-align:left"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label tiny">لینکدین</label><input class="input" name="social.linkedin" value="<%= s['social.linkedin'] || '' %>" dir="ltr" style="text-align:left"></div>
+              <div class="form-group"><label class="form-label tiny">گیت‌هاب</label><input class="input" name="social.github" value="<%= s['social.github'] || '' %>" dir="ltr" style="text-align:left"></div>
+            </div>
+            <div class="form-group"><label class="form-label tiny">کد نماد اعتماد (eNamad HTML)</label><textarea class="textarea" name="trust.enamad" style="min-height:60px;direction:ltr;text-align:left"><%= s['trust.enamad'] || '' %></textarea></div>
+            <button class="btn btn-primary btn-block" type="submit">ذخیره اطلاعات سایت</button>
+          </form>
+        </div>
+
+        <!-- Home + delivery + mail + backup -->
+        <div>
+          <div class="card mb-3">
+            <h2 class="h3 mb-3">محتوای صفحه اصلی و سئو</h2>
+            <form method="POST" action="/admin/settings/site">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <label class="form-label">عنوان سئوی صفحه اصلی</label>
+                <input class="input" name="home.meta_title" value="<%= s['home.meta_title'] || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">توضیحات سئوی صفحه اصلی</label>
+                <textarea class="textarea" name="home.meta_description" style="min-height:70px"><%= s['home.meta_description'] || '' %></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">عنوان بزرگ (Hero)</label>
+                <input class="input" name="home_hero_title" value="<%= s['home_hero_title'] || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">زیرعنوان Hero</label>
+                <textarea class="textarea" name="home_hero_subtitle" style="min-height:70px"><%= s['home_hero_subtitle'] || '' %></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">آمار صفحه اصلی (JSON)</label>
+                <textarea class="textarea" name="home.stats_json" style="min-height:90px;direction:ltr;text-align:left;font-family:monospace;font-size:.8rem"><%= s['home.stats_json'] || '[]' %></textarea>
+                <span class="form-hint">نمونه: [{"value":"+۱۲۰","label":"پروژه تحویل‌شده"}]</span>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">ذخیره محتوای خانه</button>
+            </form>
+          </div>
+
+          <div class="card mb-3">
+            <h2 class="h3 mb-3">خدمات اختصاصی (صفحه /services)</h2>
+            <form method="POST" action="/admin/settings/site">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <label class="form-label">فهرست خدمات (JSON)</label>
+                <textarea class="textarea" name="services.items_json" style="min-height:260px;direction:ltr;text-align:left;font-family:monospace;font-size:.78rem"><%= s['services.items_json'] || '[]' %></textarea>
+                <span class="form-hint">هر آیتم: {"id","icon","title","desc","bullets":[…],"from"} — آیکون‌ها: browser, app, mobile, flow, dashboard, ai</span>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">ذخیره خدمات</button>
+            </form>
+          </div>
+
+          <div class="card mb-3">
+            <h2 class="h3 mb-3">تحویل فایل دیجیتال</h2>
+            <form method="POST" action="/admin/settings/delivery">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label">اعتبار لینک دانلود (ساعت)</label>
+                  <input class="input" name="expiry_hours" type="number" min="1" max="8760" value="<%= s['download.expiry_hours'] || '168' %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">حداکثر تعداد دانلود هر لینک</label>
+                  <input class="input" name="max_downloads" type="number" min="1" max="1000" value="<%= s['download.max_downloads'] || '10' %>">
+                </div>
+              </div>
+              <button class="btn btn-primary btn-block" type="submit">ذخیره تنظیمات تحویل</button>
+            </form>
+          </div>
+
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">ایمیل (SMTP)</h2>
+            <% if (mail.configured) { %>
+              <p class="small"><span class="status ok">متصل</span> سرور: <span class="code-inline"><%= mail.host %></span></p>
+            <% } else { %>
+              <div class="alert warn"><span>SMTP پیکربندی نشده — اطلاع‌رسانی ایمیلی (بازیابی رمز، رسید خرید) ارسال نمی‌شود و لینک بازیابی رمز فقط در لاگ سرور ثبت می‌گردد. برای فعال‌سازی متغیرهای SMTP_HOST/PORT/USER/PASS را در فایل .env تنظیم و سرویس را ری‌استارت کنید.</span></div>
+            <% } %>
+          </div>
+
+          <div class="card">
+            <h2 class="h3 mb-2">پشتیبان‌گیری</h2>
+            <p class="small muted mb-2">پایگاه داده SQLite شامل همه محصولات، سفارش‌ها، کاربران و تنظیمات است. فایل‌های تحویلی در پوشه <span class="code-inline">storage/private</span> قرار دارند و باید همراه پایگاه داده پشتیبان‌گیری شوند.</p>
+            <a class="btn btn-outline btn-sm" href="/admin/settings/backup" data-confirm>⬇ دریافت فایل پشتیبان پایگاه داده</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

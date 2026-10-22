@@ -1,0 +1,38 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="panel-layout">
+    <%- include('../partials/account-side') %>
+    <main class="panel-main">
+      <div class="panel-title">
+        <h1>اعلان‌ها</h1>
+        <% if (unreadNotifications) { %>
+          <form method="POST" action="/account/notifications/read">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <input type="hidden" name="back" value="/account/notifications">
+            <button class="btn btn-ghost btn-sm" type="submit">خواندن همه</button>
+          </form>
+        <% } %>
+      </div>
+      <% if (!items.length) { %>
+        <div class="card empty-state"><h3>اعلانی ندارید</h3><p class="small">تغییر وضعیت سفارش‌ها و پروژه‌ها اینجا اعلام می‌شود.</p></div>
+      <% } else { %>
+        <div class="card" style="padding:.5rem">
+          <% items.forEach(function (n) { %>
+            <a href="<%= n.url || '#' %>" class="notif-item <%= n.is_read ? 'read' : 'unread' %>" style="border-radius:10px;text-decoration:none;color:var(--text)">
+              <span class="notif-dot"></span>
+              <span style="flex:1">
+                <b class="small" style="display:block"><%= n.title %></b>
+                <% if (n.body) { %><span class="tiny muted" style="display:block"><%= n.body %></span><% } %>
+                <span class="tiny faint"><%= h.fmtDate(n.created_at) %></span>
+              </span>
+            </a>
+          <% }); %>
+        </div>
+      <% } %>
+    </main>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

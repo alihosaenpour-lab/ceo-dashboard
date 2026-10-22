@@ -1,0 +1,56 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="no-print flex" style="justify-content:space-between;padding-top:1.4rem">
+    <a class="btn btn-ghost btn-sm" href="/account/orders/<%= order.order_no %>">→ بازگشت به سفارش</a>
+    <button class="btn btn-primary btn-sm" onclick="window.print()">چاپ / ذخیره PDF</button>
+  </div>
+  <div class="invoice-sheet">
+    <div class="inv-head">
+      <div>
+        <h1 style="font-size:1.3rem"><%= settings.name_fa %> — <%= settings.name %></h1>
+        <p class="muted" style="font-size:.8rem;margin-top:.3rem"><%= settings.address %><br>تلفن: <%= settings.phone %> — <%= settings.email %></p>
+      </div>
+      <div style="text-align:left">
+        <h2 style="font-size:1.1rem">رسید خرید / فاکتور</h2>
+        <p style="font-size:.8rem;color:#475569;margin-top:.3rem">شماره فاکتور: <b style="direction:ltr;display:inline-block"><%= order.invoice_no %></b><br>
+        شماره سفارش: <b style="direction:ltr;display:inline-block"><%= order.order_no %></b><br>
+        تاریخ: <%= h.fmtDate(order.created_at) %></p>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;gap:2rem;flex-wrap:wrap;margin-bottom:1rem;font-size:.85rem">
+      <div><b>خریدار:</b> <%= order.buyer_name %><br><span class="muted">ایمیل: <%= order.buyer_email %><br>تلفن: <%= order.buyer_phone || '—' %></span></div>
+      <div style="text-align:left"><b>وضعیت:</b> <%= h.statusLabel(order.status) %><br>
+        <% if (order.paid_at) { %><span class="muted">تاریخ پرداخت: <%= h.fmtDate(order.paid_at) %><br>شناسه تراکنش: <span style="direction:ltr;display:inline-block"><%= order.payment_ref || '—' %></span></span><% } %>
+      </div>
+    </div>
+    <table>
+      <thead><tr><th>#</th><th>محصول</th><th>نسخه</th><th>تعداد</th><th>قیمت واحد (تومان)</th><th>جمع (تومان)</th></tr></thead>
+      <tbody>
+        <% order.items.forEach(function (it, i) { %>
+          <tr>
+            <td><%= h.fmtMoney(i + 1) %></td>
+            <td><%= it.title %></td>
+            <td style="direction:ltr"><%= it.version %></td>
+            <td><%= h.fmtMoney(it.qty) %></td>
+            <td><%= it.unit_price.toLocaleString('fa-IR') %></td>
+            <td><%= it.line_total.toLocaleString('fa-IR') %></td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:.25rem;font-size:.9rem">
+      <div>جمع کل: <b><%= order.subtotal.toLocaleString('fa-IR') %></b> تومان</div>
+      <% if (order.discount_total > 0) { %><div>تخفیف <%= order.coupon_code ? '(' + order.coupon_code + ')' : '' %>: <b style="color:#059669">− <%= order.discount_total.toLocaleString('fa-IR') %></b> تومان</div><% } %>
+      <div class="inv-total" style="border-top:2px solid #0ea5e9;padding-top:.5rem;margin-top:.3rem">مبلغ پرداخت‌شده: <%= order.total.toLocaleString('fa-IR') %> تومان</div>
+    </div>
+    <p class="muted" style="font-size:.72rem;margin-top:1.6rem;border-top:1px solid #e2e8f0;padding-top:.8rem">
+      این رسید به‌صورت خودکار توسط سامانه <%= settings.name_fa %> تولید شده است. تحویل محصولات دیجیتال تنها پس از تأیید پرداخت توسط درگاه بانکی انجام می‌شود.
+      پرسش درباره این سفارش: <%= settings.email %>
+    </p>
+  </div>
+</div>
+
+</body>
+</html>

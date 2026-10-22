@@ -1,0 +1,30 @@
+<article class="card card-hover product-card reveal">
+  <div class="pc-media">
+    <a href="/product/<%= p.slug %>">
+      <img src="<%= p.cover_image || '/img/products/pos-dashboard.svg' %>" alt="<%= p.title %>" loading="lazy" width="800" height="600">
+    </a>
+    <div class="pc-badges">
+      <% if (p.off > 0) { %><span class="pill pill-off"><%= h.fmtMoney(p.off) %>٪ تخفیف</span><% } %>
+      <% if (p.is_featured) { %><span class="pill pill-hot">ویژه</span><% } %>
+    </div>
+  </div>
+  <div class="pc-body">
+    <% if (p.category_name) { %><span class="pc-cat"><%= p.category_name %></span><% } %>
+    <h3 class="pc-title"><a href="/product/<%= p.slug %>"><%= p.title %></a></h3>
+    <p class="pc-summary"><%= p.summary %></p>
+    <div class="pc-price-row">
+      <form method="POST" action="/cart/add" data-ajax-cart>
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <input type="hidden" name="product_id" value="<%= p.id %>">
+        <button type="submit" class="btn btn-ghost btn-sm" title="افزودن به سبد خرید">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+          خرید
+        </button>
+      </form>
+      <div class="price-box">
+        <% if (p.off > 0) { %><span class="price-old"><%= h.fmtMoney(p.price) %></span><% } %>
+        <div class="price-now"><%= h.fmtMoney(p.finalPrice) %> <span class="unit"><%= settings.currency %></span></div>
+      </div>
+    </div>
+  </div>
+</article>

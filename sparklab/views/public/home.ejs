@@ -1,0 +1,230 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="container hero-inner">
+    <div>
+      <span class="eyebrow">محصولات دیجیتال + توسعه نرم‌افزار سفارشی</span>
+      <h1><%= heroTitle %></h1>
+      <p class="lead"><%= heroSubtitle %></p>
+      <div class="hero-cta">
+        <a class="btn btn-primary btn-lg" href="/shop">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m2 2 3.5 14.5h13l3.5-11H6"/><circle cx="9" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>
+          مشاهده فروشگاه
+        </a>
+        <a class="btn btn-ghost btn-lg" href="/projects/new">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v18M3 12h18"/></svg>
+          ثبت سفارش پروژه
+        </a>
+      </div>
+      <div class="hero-trust">
+        <span class="t-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg> پرداخت امن با درگاه بانکی معتبر</span>
+        <span class="t-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5M12 22V12"/></svg> تحویل فوری فایل پس از پرداخت</span>
+        <span class="t-item"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg> پشتیبانی واقعی و پاسخگو</span>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="hero-orb o1"></div>
+      <div class="hero-orb o2"></div>
+      <img src="/img/hero.svg" alt="نمایی از داشبورد و اپلیکیشن‌های اسپارک لب" width="720" height="560">
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<% if (stats && stats.length) { %>
+<section class="section-tight">
+  <div class="container">
+    <div class="stats-strip">
+      <% stats.forEach(function (s) { %>
+        <div class="stat-box reveal">
+          <div class="s-value grad-text"><%= s.value %></div>
+          <div class="s-label"><%= s.label %></div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<% if (banners && banners.length) { %>
+<section class="section-tight" style="padding-top:1rem">
+  <div class="container">
+    <% banners.forEach(function (b) { %>
+      <div class="cta-band reveal" style="padding:1.6rem 2rem;text-align:right;display:flex;align-items:center;justify-content:space-between;gap:1.2rem;flex-wrap:wrap">
+        <div style="position:relative">
+          <b style="font-size:1.05rem"><%= b.title %></b>
+          <% if (b.subtitle) { %><p class="small muted" style="margin:.2rem 0 0"><%= b.subtitle %></p><% } %>
+        </div>
+        <% if (b.cta_text && b.cta_url) { %><a class="btn btn-primary" style="position:relative" href="<%= b.cta_url %>"><%= b.cta_text %></a><% } %>
+      </div>
+    <% }); %>
+  </div>
+</section>
+<% } %>
+
+<!-- Featured products -->
+<section class="section" id="products">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">فروشگاه</span>
+      <h2 class="h2">محصولات منتخب</h2>
+      <p>نرم‌افزارهای آماده‌ای که همین امروز می‌توانید بخرید، دانلود کنید و کسب‌وکارتان را متحول کنید.</p>
+    </div>
+    <div class="grid grid-3">
+      <% featured.forEach(function (p) { %>
+        <%- include('../partials/product-card', { p: p }) %>
+      <% }); %>
+    </div>
+    <div class="text-center mt-4 reveal">
+      <a class="btn btn-ghost" href="/shop">مشاهده همه محصولات
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- Categories -->
+<% if (categories.length) { %>
+<section class="section-tight">
+  <div class="container">
+    <div class="grid grid-4">
+      <% categories.slice(0,4).forEach(function (c) { %>
+        <a class="card card-hover feature-card reveal" href="/shop?category=<%= c.slug %>" style="text-decoration:none">
+          <div class="feature-icon">
+            <% if (c.icon === 'chart') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg>
+            <% } else if (c.icon === 'palette') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>
+            <% } else if (c.icon === 'phone') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+            <% } else if (c.icon === 'spark') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg>
+            <% } else { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17 10 11 4 5"/><path d="M12 19h8"/></svg><% } %>
+          </div>
+          <h3><%= c.name %></h3>
+          <p><%= c.description %></p>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- Services -->
+<section class="section" id="services">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">خدمات اختصاصی</span>
+      <h2 class="h2">پروژه‌تان را به تیم ما بسپارید</h2>
+      <p>از ایده تا استقرار — با فرآیندی شفاف، برآورد مشخص و تحویل مرحله‌ای.</p>
+    </div>
+    <div class="grid grid-3">
+      <div class="card card-hover feature-card reveal">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="14" x="3" y="4" rx="2"/><path d="M3 9h18M8 21h8"/></svg></div>
+        <h3>طراحی سایت و وب‌اپلیکیشن</h3>
+        <p>سایت شرکتی، فروشگاه آنلاین و سامانه‌های تحت وب با طراحی اختصاصی و سرعت بالا.</p>
+      </div>
+      <div class="card card-hover feature-card reveal">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg></div>
+        <h3>اپلیکیشن موبایل</h3>
+        <p>اپ‌های اندروید و iOS برای فروش، خدمات و ابزارهای سازمانی با تجربه کاربری روان.</p>
+      </div>
+      <div class="card card-hover feature-card reveal">
+        <div class="feature-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg></div>
+        <h3>اتوماسیون و هوش مصنوعی</h3>
+        <p>خودکارسازی فرآیندها، داشبوردهای سازمانی و دستیارهای هوشمند متصل به داده شما.</p>
+      </div>
+    </div>
+    <div class="text-center mt-4 reveal">
+      <a class="btn btn-outline" href="/services">جزئیات کامل خدمات</a>
+    </div>
+  </div>
+</section>
+
+<!-- Portfolio -->
+<% if (portfolio.length) { %>
+<section class="section-tight" id="portfolio">
+  <div class="container">
+    <div class="flex-between wrap mb-3 reveal">
+      <div>
+        <span class="eyebrow">نمونه‌کارها</span>
+        <h2 class="h2">پروژه‌هایی که ساخته‌ایم</h2>
+      </div>
+      <a class="btn btn-ghost btn-sm" href="/portfolio">همه نمونه‌کارها</a>
+    </div>
+    <div class="grid grid-3">
+      <% portfolio.forEach(function (w) { %>
+        <a class="card card-hover work-card reveal" href="/portfolio/<%= w.slug %>" style="text-decoration:none">
+          <div class="wc-media"><img src="<%= w.cover_image %>" alt="<%= w.title %>" loading="lazy"></div>
+          <div class="wc-body">
+            <span class="pc-cat"><%= w.client_label %></span>
+            <h3 class="pc-title" style="color:var(--text)"><%= w.title %></h3>
+            <p class="pc-summary"><%= w.summary %></p>
+          </div>
+        </a>
+      <% }); %>
+    </div>
+  </div>
+</section>
+<% } %>
+
+<!-- Order steps -->
+<section class="section">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">فرآیند سفارش</span>
+      <h2 class="h2">ثبت پروژه در چهار گام</h2>
+    </div>
+    <div class="steps">
+      <div class="card step-card reveal">
+        <div class="step-num">۱</div>
+        <h3>ثبت درخواست</h3>
+        <p>فرم سفارش پروژه را با شرح نیاز، بودجه و زمان مورد انتظار تکمیل کنید؛ فایل پیوست هم می‌توانید ضمیمه کنید.</p>
+      </div>
+      <div class="card step-card reveal">
+        <div class="step-num">۲</div>
+        <h3>بررسی و برآورد</h3>
+        <p>کارشناسان نیاز شما را بررسی و برآورد هزینه و زمان‌بندی دقیق را در پنل حساب اعلام می‌کنند.</p>
+      </div>
+      <div class="card step-card reveal">
+        <div class="step-num">۳</div>
+        <h3>اجرا و تحویل مرحله‌ای</h3>
+        <p>پس از تأیید شما، اجرا شروع می‌شود؛ در هر مرحله خروجی را می‌بینید و بازخورد می‌دهید.</p>
+      </div>
+      <div class="card step-card reveal">
+        <div class="step-num">۴</div>
+        <h3>پشتیبانی</h3>
+        <p>تحویل نهایی همراه با مستندات، آموزش و دوره تضمین رفع باگ انجام می‌شود.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-tight">
+  <div class="container">
+    <div class="cta-band reveal">
+      <h2 class="h2">ایده‌ای در سر دارید؟</h2>
+      <p>نیازتان را برای ما بنویسید — بررسی اولیه و مشاوره مسیر اجرا رایگان است. معمولاً کمتر از ۲ روز کاری پاسخ می‌دهیم.</p>
+      <div class="flex" style="justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-primary btn-lg" href="/projects/new">ثبت رایگان درخواست پروژه</a>
+        <a class="btn btn-ghost btn-lg" href="/contact">گفتگو با تیم فروش</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json" nonce="<%= cspNonce %>">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": settings.name,
+  "alternateName": settings.name_fa,
+  "description": settings.description,
+  "email": settings.email || undefined,
+  "telephone": settings.phone || undefined,
+  "address": settings.address ? { "@type": "PostalAddress", "addressLocality": "تهران", "streetAddress": settings.address, "addressCountry": "IR" } : undefined,
+  "sameAs": Object.values(settings.socials).filter(Boolean)
+}) %>
+</script>
+
+<%- include('../partials/footer') %>

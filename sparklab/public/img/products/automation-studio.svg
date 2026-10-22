@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600">
+  <defs>
+    <linearGradient id="bg-automationstudio" x1="0" y1="0" x2="800" y2="600" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1220"/><stop offset="1" stop-color="#101C33"/>
+    </linearGradient>
+    <linearGradient id="ac-automationstudio" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBBF24"/><stop offset="1" stop-color="#F97316"/>
+    </linearGradient>
+    <radialGradient id="gl-automationstudio" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FBBF24" stop-opacity="0.35"/><stop offset="1" stop-color="#FBBF24" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="sh-automationstudio" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="18" flood-color="#020617" flood-opacity="0.55"/>
+    </filter>
+  </defs>
+  <rect width="800" height="600" fill="url(#bg-automationstudio)"/>
+  <circle cx="400" cy="300" r="300" fill="url(#gl-automationstudio)" opacity="0.6"/>
+  <g><line x1="40" y1="0" x2="40" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="80" y1="0" x2="80" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="120" y1="0" x2="120" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="160" y1="0" x2="160" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="200" y1="0" x2="200" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="240" y1="0" x2="240" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="280" y1="0" x2="280" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="320" y1="0" x2="320" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="360" y1="0" x2="360" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="400" y1="0" x2="400" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="440" y1="0" x2="440" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="480" y1="0" x2="480" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="520" y1="0" x2="520" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="560" y1="0" x2="560" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="600" y1="0" x2="600" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="640" y1="0" x2="640" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="680" y1="0" x2="680" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="720" y1="0" x2="720" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="760" y1="0" x2="760" y2="600" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="40" x2="800" y2="40" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="80" x2="800" y2="80" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="120" x2="800" y2="120" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="160" x2="800" y2="160" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="200" x2="800" y2="200" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="240" x2="800" y2="240" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="280" x2="800" y2="280" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="320" x2="800" y2="320" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="360" x2="800" y2="360" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="400" x2="800" y2="400" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="440" x2="800" y2="440" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="480" x2="800" y2="480" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="520" x2="800" y2="520" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/><line x1="0" y1="560" x2="800" y2="560" stroke="#1E293B" stroke-opacity="0.25" stroke-width="1"/></g>
+  <g>
+    <rect x="40" y="40" width="290" height="66" rx="14" fill="#0F1B30" stroke="#1E293B"/>
+    <circle cx="72" cy="73" r="12" fill="url(#ac-automationstudio)"/>
+    <text x="96" y="68" font-family="Tahoma,sans-serif" font-size="17" font-weight="bold" fill="#E2E8F0">اتوماسیون فرآیندها</text>
+    <text x="96" y="92" font-family="Tahoma,sans-serif" font-size="12.5" fill="#64748B">Spark Flow Studio · v2.2</text>
+  </g>
+  <g filter="url(#sh-automationstudio)">
+    <g>
+    <rect x="80" y="170" width="200" height="56" rx="14" fill="#0F1B30" stroke="#2B3B57"/>
+    <circle cx="106" cy="198" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="126" y="188" width="130" height="9" rx="4" fill="#475569"/>
+    <rect x="126" y="203" width="90" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <g>
+    <rect x="420" y="140" width="220" height="56" rx="14" fill="#0F1B30" stroke="#2B3B57"/>
+    <circle cx="446" cy="168" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="466" y="158" width="150" height="9" rx="4" fill="#475569"/>
+    <rect x="466" y="173" width="110" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <g>
+    <rect x="420" y="260" width="220" height="56" rx="14" fill="#0F1B30" stroke="#2B3B57"/>
+    <circle cx="446" cy="288" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="466" y="278" width="150" height="9" rx="4" fill="#475569"/>
+    <rect x="466" y="293" width="110" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <g>
+    <rect x="160" y="330" width="200" height="56" rx="14" fill="#0F1B30" stroke="#2B3B57"/>
+    <circle cx="186" cy="358" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="206" y="348" width="130" height="9" rx="4" fill="#475569"/>
+    <rect x="206" y="363" width="90" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <g>
+    <rect x="160" y="450" width="220" height="56" rx="14" fill="#131F38" stroke="#2B3B57"/>
+    <circle cx="186" cy="478" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="206" y="468" width="150" height="9" rx="4" fill="#475569"/>
+    <rect x="206" y="483" width="110" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <g>
+    <rect x="520" y="420" width="220" height="56" rx="14" fill="#0F1B30" stroke="#2B3B57"/>
+    <circle cx="546" cy="448" r="9" fill="url(#ac-automationstudio)"/>
+    <rect x="566" y="438" width="150" height="9" rx="4" fill="#475569"/>
+    <rect x="566" y="453" width="110" height="7" rx="3" fill="#1E293B"/>
+  </g>
+    <path d="M280 198 C 320 198, 380 168, 420 168" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+    <path d="M280 210 C 320 210, 380 288, 420 288" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+    <path d="M530 196 C 570 196, 440 262, 480 262" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+    <path d="M420 292 C 460 292, 320 350, 360 350" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+    <path d="M260 386 C 300 386, 210 450, 250 450" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+    <path d="M380 478 C 420 478, 480 452, 520 452" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-opacity="0.65" stroke-dasharray="1 7" stroke-linecap="round"/>
+  </g>
+</svg>

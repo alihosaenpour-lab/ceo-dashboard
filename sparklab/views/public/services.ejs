@@ -1,0 +1,73 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><span>خدمات</span></nav>
+    <h1>خدمات اختصاصی طراحی و توسعه نرم‌افزار</h1>
+    <p>تیم اسپارک لب از مشاوره و برآورد تا استقرار و پشتیبانی در کنار شماست. هر پروژه با مستندات، زمان‌بندی شفاف و تحویل مرحله‌ای اجرا می‌شود.</p>
+  </div>
+</div>
+
+<section class="section-tight" style="padding-bottom:2rem">
+  <div class="container">
+    <div class="grid grid-2">
+      <% services.forEach(function (s) { %>
+        <div class="card card-hover feature-card reveal">
+          <div class="feature-icon">
+            <% if (s.icon === 'browser') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="14" x="3" y="4" rx="2"/><path d="M3 9h18M8 21h8"/></svg>
+            <% } else if (s.icon === 'app') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="16" x="4" y="4" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+            <% } else if (s.icon === 'mobile') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>
+            <% } else if (s.icon === 'flow') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="8" height="8" x="3" y="3" rx="2"/><path d="M7 11v4a2 2 0 0 0 2 2h4"/><rect width="8" height="8" x="13" y="13" rx="2"/></svg>
+            <% } else if (s.icon === 'dashboard') { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg>
+            <% } else { %><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3L12 3Z"/></svg><% } %>
+          </div>
+          <h3><%= s.title %></h3>
+          <p><%= s.desc %></p>
+          <ul class="check-list" style="margin-top:.4rem">
+            <% (s.bullets || []).forEach(function (b) { %>
+              <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span><%= b %></span></li>
+            <% }); %>
+          </ul>
+          <div class="from-price flex-between">
+            <span><%= s.from %></span>
+            <a class="btn btn-outline btn-sm" href="/projects/new?type=<%= s.id %>">ثبت سفارش</a>
+          </div>
+        </div>
+      <% }); %>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="container">
+    <div class="section-head center reveal">
+      <span class="eyebrow">فرآیند همکاری</span>
+      <h2 class="h2">از اولین تماس تا پشتیبانی</h2>
+    </div>
+    <div class="steps">
+      <div class="card step-card reveal"><div class="step-num">۱</div><h3>مشاوره رایگان</h3><p>نیازتان را در فرم پروژه شرح دهید؛ یک جلسه مشاوره (آنلاین یا حضوری) برای شفاف‌سازی دامنه کار هماهنگ می‌کنیم.</p></div>
+      <div class="card step-card reveal"><div class="step-num">۲</div><h3>پیشنهاد و قرارداد</h3><p>برآورد هزینه، زمان‌بندی فازها و شرایط پرداخت را مکتوب دریافت می‌کنید؛ پس از تأیید، قرارداد الکترونیکی منعقد می‌شود.</p></div>
+      <div class="card step-card reveal"><div class="step-num">۳</div><h3>توسسه با بازبینی شما</h3><p>در پایان هر فاز، خروجی را روی محیط آزمایشی می‌بینید؛ بازخوردها در همان فاز اعمال می‌شود.</p></div>
+      <div class="card step-card reveal"><div class="step-num">۴</div><h3>استقرار و پشتیبانی</h3><p>راه‌اندازی روی سرور شما، آموزش تیم و دوره تضمین؛ پس از آن بسته‌های پشتیبانی ادامه‌دار قابل توافق است.</p></div>
+    </div>
+    <div class="cta-band mt-4 reveal">
+      <h2 class="h2">آماده شروع پروژه‌تان هستیم</h2>
+      <p>فرم ثبت پروژه کمتر از ۵ دقیقه زمان می‌برد و بررسی اولیه رایگان است.</p>
+      <a class="btn btn-primary btn-lg" href="/projects/new">ثبت سفارش پروژه</a>
+    </div>
+  </div>
+</section>
+
+<script type="application/ld+json" nonce="<%= cspNonce %>">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "ProfessionalService",
+  "name": settings.name_fa + " — خدمات توسعه نرم‌افزار",
+  "description": settings.description,
+  "areaServed": "IR",
+  "makesOffer": services.map(function (s) { return { "@type": "Offer", "name": s.title, "description": s.desc }; })
+}) %>
+</script>
+
+<%- include('../partials/footer') %>

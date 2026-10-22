@@ -1,0 +1,49 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side', { sideCounts: { pendingOrders: counts.pending } }) %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <div class="flex wrap" style="gap:.4rem">
+          <a class="btn btn-sm <%= !status ? 'btn-primary' : 'btn-ghost' %>" href="/admin/orders">همه (<%= h.fmtMoney(counts.all) %>)</a>
+          <a class="btn btn-sm <%= status === 'pending' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/orders?status=pending">در انتظار (<%= h.fmtMoney(counts.pending) %>)</a>
+          <a class="btn btn-sm <%= status === 'paid' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/orders?status=paid">پرداخت‌شده (<%= h.fmtMoney(counts.paid) %>)</a>
+          <a class="btn btn-sm <%= status === 'failed' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/orders?status=failed">ناموفق (<%= h.fmtMoney(counts.failed) %>)</a>
+          <a class="btn btn-sm <%= status === 'refunded' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/orders?status=refunded">بازپرداخت (<%= h.fmtMoney(counts.refunded) %>)</a>
+        </div>
+        <form method="GET" action="/admin/orders" class="search-inline">
+          <% if (status) { %><input type="hidden" name="status" value="<%= status %>"><% } %>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="search" name="q" value="<%= q %>" placeholder="شماره سفارش، ایمیل یا نام…">
+        </form>
+      </div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>شماره</th><th>خریدار</th><th>اقلام</th><th>مبلغ</th><th>درگاه</th><th>تاریخ</th><th>وضعیت</th><th></th></tr></thead>
+          <tbody>
+            <% orders.forEach(function (o) { %>
+              <tr>
+                <td class="num" style="direction:ltr;text-align:right"><a href="/admin/orders/<%= o.order_no %>"><b><%= o.order_no %></b></a></td>
+                <td class="small"><%= o.buyer_name %><br><span class="tiny faint"><%= o.buyer_email %><%= o.account_name ? '' : ' (مهمان)' %></span></td>
+                <td class="small"><%= o.items.map(function (i) { return i.title + ' ×' + i.qty; }).join('، ') %></td>
+                <td class="num"><b><%= h.fmtMoney(o.total) %></b></td>
+                <td class="small"><%= o.gateway === 'zarinpal' ? 'زرین‌پال' : (o.gateway === 'test' ? 'آزمایشی' : (o.gateway || '—')) %></td>
+                <td class="tiny"><%= h.fmtDate(o.created_at) %></td>
+                <td><span class="status <%= h.statusClass(o.status) %>"><%= h.statusLabel(o.status) %></span></td>
+                <td><a class="btn btn-ghost btn-sm" href="/admin/orders/<%= o.order_no %>">جزئیات</a></td>
+              </tr>
+            <% }); %>
+            <% if (!orders.length) { %><tr><td colspan="8" class="small muted text-center" style="padding:2rem">سفارشی با این فیلترها یافت نشد.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

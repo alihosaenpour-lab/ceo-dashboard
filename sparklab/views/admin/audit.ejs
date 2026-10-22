@@ -1,0 +1,45 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1>رویدادهای امنیتی و ممیزی</h1>
+        <span class="small faint"><%= h.fmtMoney(total) %> رویداد ثبت‌شده</span>
+      </div>
+      <div class="alert info mb-3"><span>ورودهای ناموفق، محدودیت نرخ، تغییرات مدیریتی، دانلودها و تلاش‌های دسترسی غیرمجاز اینجا ثبت می‌شوند.</span></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>زمان</th><th>رویداد</th><th>بازیگر</th><th>موجودیت</th><th>IP</th><th>جزئیات</th></tr></thead>
+          <tbody>
+            <% rows.forEach(function (a) { %>
+              <tr>
+                <td class="tiny" style="white-space:nowrap"><%= h.fmtDate(a.created_at) %></td>
+                <td><span class="code-inline" style="font-size:.72rem"><%= a.action %></span></td>
+                <td class="tiny"><%= a.actor_role || 'guest' %><%= a.actor_id ? ' #' + a.actor_id : '' %></td>
+                <td class="tiny"><%= a.entity ? a.entity + (a.entity_id ? ' #' + a.entity_id : '') : '—' %></td>
+                <td class="tiny" style="direction:ltr;text-align:right"><%= a.ip || '—' %></td>
+                <td class="tiny faint" style="max-width:340px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title='<%= (a.meta_json || '').replace(/'/g, "&#39;") %>'><%= a.meta_json && a.meta_json !== '{}' ? a.meta_json : '' %></td>
+              </tr>
+            <% }); %>
+            <% if (!rows.length) { %><tr><td colspan="6" class="small muted text-center" style="padding:2rem">رویدادی ثبت نشده است.</td></tr><% } %>
+          </tbody>
+        </table>
+      </div>
+      <% if (pages > 1) { %>
+        <nav class="pagination">
+          <% for (let i = Math.max(1, page - 3); i <= Math.min(pages, page + 3); i++) { %>
+            <% if (i === page) { %><span class="current"><%= h.fmtMoney(i) %></span><% } else { %><a href="/admin/audit?page=<%= i %>"><%= h.fmtMoney(i) %></a><% } %>
+          <% } %>
+        </nav>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

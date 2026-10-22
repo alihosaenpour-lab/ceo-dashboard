@@ -1,0 +1,218 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <% const v = values || {}; const imgList = (product && product.images) ? product.images : (v.images || []); %>
+      <form method="POST" action="<%= (product ? '/admin/products/' + product.id + '/edit' : '/admin/products/new') + '?_csrf=' + csrfToken %>" enctype="multipart/form-data" id="product-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="grid grid-2" style="grid-template-columns:1fr 330px;align-items:start">
+          <div>
+            <div class="card mb-3">
+              <h2 class="h3 mb-3">اطلاعات اصلی</h2>
+              <div class="form-group">
+                <label class="form-label" for="t">عنوان محصول <span class="req">*</span></label>
+                <input class="input <%= errors.title ? 'invalid' : '' %>" id="t" name="title" value="<%= v.title || '' %>" required>
+                <% if (errors.title) { %><span class="form-error"><%= errors.title %></span><% } %>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="s">نشانی (slug)</label>
+                  <input class="input <%= errors.slug ? 'invalid' : '' %>" id="s" name="slug" dir="ltr" style="text-align:left" value="<%= v.slug || '' %>" placeholder="auto-from-title">
+                  <% if (errors.slug) { %><span class="form-error"><%= errors.slug %></span><% } %>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="c">دسته‌بندی</label>
+                  <select class="select" id="c" name="category_id">
+                    <option value="">— بدون دسته —</option>
+                    <% categories.forEach(function (c) { %>
+                      <option value="<%= c.id %>" <%= String(v.category_id) === String(c.id) ? 'selected' : '' %>><%= c.name %></option>
+                    <% }); %>
+                  </select>
+                  <% if (errors.category_id) { %><span class="form-error"><%= errors.category_id %></span><% } %>
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sum">خلاصه (در کارت فروشگاه نمایش داده می‌شود)</label>
+                <textarea class="textarea" id="sum" name="summary" style="min-height:70px" required><%= v.summary || '' %></textarea>
+                <% if (errors.summary) { %><span class="form-error"><%= errors.summary %></span><% } %>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="desc">توضیحات کامل <span class="tiny faint">(HTML مجاز — برای امنیت ضدعفونی می‌شود)</span></label>
+                <textarea class="textarea" id="desc" name="description_html" style="min-height:220px;font-family:ui-monospace,monospace;font-size:.82rem;direction:ltr;text-align:left"><%= v.description_html || '' %></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="feat">امکانات <span class="tiny faint">(هر مورد در یک خط)</span></label>
+                <textarea class="textarea" id="feat" name="features" style="min-height:130px"><%= Array.isArray(v.features) ? v.features.join('\n') : (v.features || '') %></textarea>
+              </div>
+            </div>
+
+            <div class="card mb-3">
+              <h2 class="h3 mb-3">فنی و پشتیبانی</h2>
+              <div class="form-group">
+                <label class="form-label" for="req">پیش‌نیازها</label>
+                <textarea class="textarea" id="req" name="requirements_text" style="min-height:80px"><%= v.requirements_text || '' %></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="comp">سازگاری</label>
+                <textarea class="textarea" id="comp" name="compatibility_text" style="min-height:80px"><%= v.compatibility_text || '' %></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sup">شرایط پشتیبانی</label>
+                <textarea class="textarea" id="sup" name="support_terms" style="min-height:80px"><%= v.support_terms || '' %></textarea>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label class="form-label" for="lic">نوع مجوز</label>
+                  <select class="select" id="lic" name="license_type">
+                    <% [['standard','استاندارد'],['extended','توسعه‌یافته'],['single-site','تک‌سایت'],['developer','توسعه‌دهنده'],['saas','SaaS']].forEach(function (o) { %>
+                      <option value="<%= o[0] %>" <%= (v.license_type || 'standard') === o[0] ? 'selected' : '' %>><%= o[1] %></option>
+                    <% }); %>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="ver">نسخه</label>
+                  <input class="input" id="ver" name="version" dir="ltr" style="text-align:left" value="<%= v.version || '1.0.0' %>">
+                </div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="licn">توضیح مجوز</label>
+                <input class="input" id="licn" name="license_note" value="<%= v.license_note || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="demo">نشانی دمو (اختیاری)</label>
+                <input class="input" id="demo" name="demo_url" dir="ltr" style="text-align:left" value="<%= v.demo_url || '' %>" placeholder="https://…">
+                <% if (errors.demo_url) { %><span class="form-error"><%= errors.demo_url %></span><% } %>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="flex-between mb-2">
+                <h2 class="h3">پرسش‌های متداول محصول</h2>
+                <button type="button" class="btn btn-ghost btn-sm" id="faq-add">+ افزودن پرسش</button>
+              </div>
+              <div id="faq-list">
+                <% (product && product.faq && product.faq.length ? product.faq : []).forEach(function (f) { %>
+                  <div class="faq-row" style="display:grid;grid-template-columns:1fr 1fr auto;gap:.6rem;margin-bottom:.6rem;align-items:start">
+                    <input class="input" name="faq_q" placeholder="پرسش" value="<%= f.q %>">
+                    <textarea class="textarea" name="faq_a" placeholder="پاسخ" style="min-height:44px"><%= f.a %></textarea>
+                    <button type="button" class="btn btn-sm btn-danger" onclick="this.parentElement.remove()">×</button>
+                  </div>
+                <% }); %>
+              </div>
+            </div>
+          </div>
+
+          <aside>
+            <div class="card mb-3">
+              <button class="btn btn-primary btn-block btn-lg" type="submit"><%= product ? 'ذخیره تغییرات' : 'ایجاد محصول' %></button>
+              <% if (product) { %><a class="btn btn-ghost btn-block mt-2" href="/product/<%= product.slug %>" target="_blank">مشاهده در سایت ↗</a><% } %>
+              <hr class="divider">
+              <div class="check-row mb-2"><input type="checkbox" id="ck-a" name="is_active" value="1" <%= (product ? product.is_active : (v.is_active === undefined ? 1 : v.is_active)) ? 'checked' : '' %>><label for="ck-a">فعال (در فروشگاه نمایش داده شود)</label></div>
+              <div class="check-row"><input type="checkbox" id="ck-f" name="is_featured" value="1" <%= (product && product.is_featured) || v.is_featured ? 'checked' : '' %>><label for="ck-f">محصول ویژه</label></div>
+            </div>
+            <div class="card mb-3">
+              <h3 class="h3 mb-2">قیمت‌گذاری</h3>
+              <div class="form-group">
+                <label class="form-label" for="pr">قیمت (تومان) <span class="req">*</span></label>
+                <input class="input <%= errors.price ? 'invalid' : '' %>" id="pr" name="price" type="number" min="0" value="<%= v.price !== undefined && v.price !== '' ? v.price : '' %>" required>
+                <% if (errors.price) { %><span class="form-error"><%= errors.price %></span><% } %>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="dp">قیمت با تخفیف (اختیاری)</label>
+                <input class="input <%= errors.discount_price ? 'invalid' : '' %>" id="dp" name="discount_price" type="number" min="0" value="<%= v.discount_price || '' %>">
+                <% if (errors.discount_price) { %><span class="form-error"><%= errors.discount_price %></span><% } %>
+              </div>
+            </div>
+            <div class="card mb-3">
+              <h3 class="h3 mb-2">تصاویر</h3>
+              <% if (imgList && imgList.length) { %>
+                <div class="grid grid-2 mb-2">
+                  <% imgList.forEach(function (img) { %>
+                    <label class="check-row" style="gap:.4rem;font-size:.72rem">
+                      <input type="checkbox" name="keep_images" value="<%= img %>" checked>
+                      <img src="<%= img %>" alt="" style="width:100%;border-radius:8px;border:1px solid var(--border)">
+                    </label>
+                  <% }); %>
+                </div>
+                <p class="tiny faint mb-2">تیک هر تصویر را بردارید تا حذف شود.</p>
+              <% } %>
+              <div class="file-drop">
+                <input type="file" name="images" multiple accept=".jpg,.jpeg,.png,.webp,.gif,.svg">
+                <span class="form-hint">JPG/PNG/WebP/SVG — هر فایل حداکثر <%= 5 %> مگابایت</span>
+              </div>
+              <div class="form-group mt-2">
+                <label class="form-label" for="cov">تصویر اصلی (cover)</label>
+                <select class="select" id="cov" name="cover_image">
+                  <% (imgList || []).forEach(function (img) { %>
+                    <option value="<%= img %>" <%= product && product.cover_image === img ? 'selected' : '' %>><%= img %></option>
+                  <% }); %>
+                </select>
+              </div>
+            </div>
+          </aside>
+        </div>
+      </form>
+
+      <% if (product) { %>
+        <div class="card mt-3">
+          <h2 class="h3 mb-2">فایل‌های محصول (تحویل پس از پرداخت — فضای خصوصی)</h2>
+          <% if (!files.length) { %>
+            <div class="alert warn mb-3"><span>این محصول هنوز فایل تحویلی ندارد؛ بدون فایل، پس از پرداخت دسترسی دانلودی ایجاد نمی‌شود.</span></div>
+          <% } %>
+          <% if (files.length) { %>
+            <div class="table-wrap mb-3">
+              <table class="tbl">
+                <thead><tr><th>نسخه</th><th>برچسب</th><th>نام فایل</th><th>حجم</th><th>SHA-256</th><th>تاریخ</th><th>وضعیت</th><th></th></tr></thead>
+                <tbody>
+                  <% files.forEach(function (f) { %>
+                    <tr>
+                      <td class="num" style="direction:ltr"><%= f.version %></td>
+                      <td class="small"><%= f.label || '—' %></td>
+                      <td class="small" style="direction:ltr;text-align:right"><%= f.original_name %></td>
+                      <td class="num small"><%= h.fmtMoney(Math.round(f.size / 1024)) %> KB</td>
+                      <td class="tiny faint" style="direction:ltr" title="<%= f.sha256 %>"><%= f.sha256 ? f.sha256.slice(0, 12) + '…' : '—' %></td>
+                      <td class="tiny"><%= h.fmtDate(f.created_at) %></td>
+                      <td><span class="status <%= f.is_active ? 'ok' : 'muted' %>"><%= f.is_active ? 'فعال' : 'غیرفعال' %></span></td>
+                      <td>
+                        <% if (f.is_active) { %>
+                          <form method="POST" action="/admin/products/files/<%= f.id %>/deactivate" data-confirm="فایل نسخه <%= f.version %> غیرفعال شود؟ لینک‌های دانلود قدیمی از کار می‌افتند.">
+                            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                            <button class="btn btn-danger btn-sm" type="submit">غیرفعال‌سازی</button>
+                          </form>
+                        <% } %>
+                      </td>
+                    </tr>
+                  <% }); %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+          <form method="POST" action="/admin/products/<%= product.id %>/files?_csrf=<%= csrfToken %>" enctype="multipart/form-data" class="grid grid-3" style="align-items:end;gap:.8rem">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-group" style="margin:0">
+              <label class="form-label" for="fv">نسخه فایل</label>
+              <input class="input" id="fv" name="version" dir="ltr" style="text-align:left" value="<%= product.version %>" required>
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" for="fl">برچسب</label>
+              <input class="input" id="fl" name="label" placeholder="مثلاً: بسته کامل نصب">
+            </div>
+            <div class="form-group" style="margin:0">
+              <label class="form-label" for="ff">فایل <span class="tiny faint">(zip/rar/7z/tar/gz/pdf/txt)</span></label>
+              <input class="input" id="ff" name="file" type="file" accept=".zip,.rar,.7z,.tar,.gz,.tgz,.pdf,.txt" required style="padding:.4rem">
+            </div>
+            <button class="btn btn-outline" type="submit">بارگذاری فایل نسخه جدید</button>
+          </form>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

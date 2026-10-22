@@ -1,0 +1,56 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="panel-layout">
+    <%- include('../partials/account-side') %>
+    <main class="panel-main">
+      <div class="panel-title">
+        <h1>دانلودهای من</h1>
+      </div>
+      <% if (!grants.length) { %>
+        <div class="card empty-state">
+          <h3 class="mb-1">فایلی برای دانلود ندارید</h3>
+          <p class="mb-3">پس از پرداخت موفق هر سفارش، فایل‌های محصول اینجا ظاهر می‌شوند.</p>
+          <a class="btn btn-primary" href="/shop">رفتن به فروشگاه</a>
+        </div>
+      <% } else { %>
+        <% grants.forEach(function (g) {
+             const expired = g.expires_at && new Date(g.expires_at) < new Date();
+             const exhausted = g.max_downloads && g.downloads_count >= g.max_downloads;
+             const usable = !g.revoked && !expired && !exhausted; %>
+          <div class="card mb-2 flex-between wrap" style="gap:1rem">
+            <div class="flex" style="gap:1rem;align-items:flex-start">
+              <img src="<%= g.cover_image || '/img/products/pos-dashboard.svg' %>" alt="" style="width:84px;height:63px;border-radius:10px;object-fit:cover;border:1px solid var(--border)">
+              <div>
+                <a href="/product/<%= g.product_slug %>" style="font-weight:800"><%= g.product_title %></a>
+                <div class="tiny faint mt-1">
+                  سفارش <span style="direction:ltr;display:inline-block"><%= g.order_no %></span> · نسخه <span style="direction:ltr;display:inline-block"><%= g.version %></span> ·
+                  فایل <span style="direction:ltr;display:inline-block"><%= g.original_name %></span> (<%= h.fmtMoney(Math.round(g.size / 1024)) %> کیلوبایت)
+                </div>
+                <div class="tiny mt-1">
+                  <% if (g.revoked) { %><span class="status bad">لغو شده</span>
+                  <% } else if (expired) { %><span class="status warn">لینک منقضی شد</span>
+                  <% } else if (exhausted) { %><span class="status warn">سقف دانلود پر شد</span>
+                  <% } else { %><span class="status ok">فعال تا <%= h.fmtDate(g.expires_at) %></span><% } %>
+                  <span class="faint"> · دانلودهای استفاده‌شده: <%= h.fmtMoney(g.downloads_count) %><% if (g.max_downloads) { %> از <%= h.fmtMoney(g.max_downloads) %><% } %></span>
+                </div>
+              </div>
+            </div>
+            <% if (usable) { %>
+              <a class="btn btn-primary btn-sm" href="/download/<%= g.token %>">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>
+                دانلود
+              </a>
+            <% } else { %>
+              <a class="btn btn-ghost btn-sm" href="/account/orders/<%= g.order_no %>" title="برای صدور لینک تازه با پشتیبانی تماس بگیرید">جزئیات سفارش</a>
+            <% } %>
+          </div>
+        <% }); %>
+        <p class="tiny faint mt-2">لینک‌ها امن، زمان‌دار و مختص حساب شما هستند. اگر لینکی منقضی شد، از طریق <a href="/contact">پشتیبانی</a> درخواست لینک جدید دهید تا مدیر آن را تمدید کند.</p>
+      <% } %>
+    </main>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

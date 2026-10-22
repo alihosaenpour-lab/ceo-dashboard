@@ -1,0 +1,64 @@
+<body>
+<header class="site-header">
+  <div class="container">
+    <a class="brand" href="/" aria-label="<%= settings.name_fa %>">
+      <img src="/img/logo-icon.svg" alt="لوگوی <%= settings.name %>">
+      <span>
+        <span class="brand-name">SPARK<span>LAB</span></span>
+        <span class="brand-sub"><%= settings.name_fa %></span>
+      </span>
+    </a>
+    <nav class="main-nav" aria-label="ناوبری اصلی">
+      <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">خانه</a>
+      <a href="/shop" class="<%= currentPath.startsWith('/shop') || currentPath.startsWith('/product') ? 'active' : '' %>">فروشگاه</a>
+      <a href="/services" class="<%= currentPath.startsWith('/services') ? 'active' : '' %>">خدمات</a>
+      <a href="/portfolio" class="<%= currentPath.startsWith('/portfolio') ? 'active' : '' %>">نمونه‌کارها</a>
+      <a href="/projects/new" class="<%= currentPath.startsWith('/projects') ? 'active' : '' %>">سفارش پروژه</a>
+      <a href="/p/about" class="<%= currentPath === '/p/about' ? 'active' : '' %>">درباره ما</a>
+      <a href="/contact" class="<%= currentPath === '/contact' ? 'active' : '' %>">تماس</a>
+    </nav>
+    <div class="header-actions">
+      <a class="icon-btn" href="/shop" aria-label="جست‌وجو در فروشگاه" title="جست‌وجو">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+      </a>
+      <a class="icon-btn" href="/cart" aria-label="سبد خرید" title="سبد خرید">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        <span class="badge-dot <%= cartCount ? '' : 'hidden' %>" data-cart-count><%= h.fmtMoney(cartCount) %></span>
+      </a>
+      <% if (currentUser) { %>
+        <a class="btn btn-ghost btn-sm" href="<%= (currentUser.role === 'admin' || currentUser.role === 'staff') ? '/admin' : '/account' %>">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          پنل من
+        </a>
+      <% } else { %>
+        <a class="btn btn-ghost btn-sm" href="/auth/login">ورود</a>
+        <a class="btn btn-primary btn-sm" href="/auth/register">ثبت‌نام</a>
+      <% } %>
+      <button class="icon-btn nav-toggle" aria-label="منو" aria-expanded="false">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+    </div>
+  </div>
+</header>
+<nav class="mobile-nav" aria-label="منوی موبایل">
+  <a href="/" class="<%= currentPath === '/' ? 'active' : '' %>">خانه</a>
+  <a href="/shop">فروشگاه</a>
+  <a href="/services">خدمات اختصاصی</a>
+  <a href="/portfolio">نمونه‌کارها</a>
+  <a href="/projects/new">ثبت سفارش پروژه</a>
+  <a href="/faq">پرسش‌های متداول</a>
+  <a href="/p/about">درباره ما</a>
+  <a href="/contact">تماس با ما</a>
+  <div class="m-sep"></div>
+  <% if (currentUser) { %>
+    <a href="<%= (currentUser.role === 'admin' || currentUser.role === 'staff') ? '/admin' : '/account' %>">پنل کاربری</a>
+    <form method="POST" action="/auth/logout" style="padding:.4rem 1rem">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+      <button class="btn btn-danger btn-sm btn-block" type="submit">خروج از حساب</button>
+    </form>
+  <% } else { %>
+    <a href="/auth/login">ورود به حساب</a>
+    <a href="/auth/register">ایجاد حساب جدید</a>
+  <% } %>
+</nav>
+<%- include('flash') %>

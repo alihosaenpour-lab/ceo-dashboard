@@ -1,0 +1,42 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <div class="panel-layout">
+    <%- include('../partials/account-side') %>
+    <main class="panel-main">
+      <div class="panel-title">
+        <h1>پروژه‌های من</h1>
+        <a class="btn btn-primary btn-sm" href="/projects/new">+ ثبت پروژه جدید</a>
+      </div>
+      <% if (!projects.length) { %>
+        <div class="card empty-state">
+          <h3 class="mb-1">پروژه‌ای ثبت نکرده‌اید</h3>
+          <p class="mb-3">ایده یا نیاز نرم‌افزاری خود را بنویسید تا بررسی و برآورد رایگان دریافت کنید.</p>
+          <a class="btn btn-primary" href="/projects/new">ثبت اولین درخواست</a>
+        </div>
+      <% } else { %>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>کد پیگیری</th><th>عنوان</th><th>نوع</th><th>تاریخ ثبت</th><th>برآورد</th><th>وضعیت</th><th></th></tr></thead>
+            <tbody>
+              <% projects.forEach(function (p) { %>
+                <tr>
+                  <td class="num" style="direction:ltr;text-align:right"><b><%= p.ref_no %></b></td>
+                  <td><%= p.title %></td>
+                  <td class="small"><%= p.project_type %></td>
+                  <td class="tiny"><%= h.fmtDate(p.created_at) %></td>
+                  <td class="num"><%= p.estimate_amount ? h.fmtMoney(p.estimate_amount) + ' تومان' : '—' %></td>
+                  <td><span class="status <%= h.statusClass(p.status) %>"><%= h.statusLabel(p.status) %></span></td>
+                  <td><a class="btn btn-ghost btn-sm" href="/account/projects/<%= p.id %>">جزئیات</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      <% } %>
+    </main>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

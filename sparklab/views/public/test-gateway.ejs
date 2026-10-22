@@ -1,0 +1,35 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="section-tight">
+  <div class="container">
+    <div class="test-gw-wrap">
+      <div class="test-banner">⚠ محیط آزمایشی — این یک درگاه پرداخت واقعی نیست</div>
+      <div class="card card-pad-lg text-center">
+        <div class="feature-icon" style="margin:0 auto 1rem;width:64px;height:64px">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="20" height="14" x="2" y="5" rx="2"/><path d="M2 10h20"/></svg>
+        </div>
+        <h1 class="h3">درگاه پرداخت آزمایشی اسپارک لب</h1>
+        <p class="muted small mt-1 mb-3">این صفحه جایگزین موقت صفحه بانک است تا چرخه سفارش (پرداخت موفق و ناموفق، تأیید سمت سرور و تحویل فایل) در محیط تست قابل آزمایش باشد. هیچ پولی جابه‌جا نمی‌شود.</p>
+        <div class="card" style="background:var(--bg-1);text-align:right;margin-bottom:1.4rem">
+          <div class="summary-row"><span>شماره سفارش</span><span style="direction:ltr;font-weight:800"><%= order.order_no %></span></div>
+          <div class="summary-row"><span>پذیرنده</span><span><%= settings.name_fa %></span></div>
+          <div class="summary-row total" style="border-color:var(--border)"><span>مبلغ</span><span><%= h.fmtMoney(order.total) %> <%= settings.currency %></span></div>
+        </div>
+        <form method="POST" action="/checkout/callback?gateway=test&order=<%= order.order_no %>">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="state" value="<%= state %>">
+          <input type="hidden" name="order" value="<%= order.order_no %>">
+          <input type="hidden" name="gateway" value="test">
+          <div class="grid" style="gap:.8rem">
+            <button class="btn btn-primary btn-lg" type="submit" name="outcome" value="ok">✓ پرداخت موفق (تست)</button>
+            <button class="btn btn-danger btn-lg" type="submit" name="outcome" value="fail">✗ انصراف / پرداخت ناموفق (تست)</button>
+          </div>
+        </form>
+        <p class="tiny faint mt-3">نتیجه انتخابی در سمت سرور با توکن امضاشده و مبلغ سفارش اعتبارسنجی می‌شود؛ همان‌طور که در درگاه واقعی، تأیید فقط از پاسخ استعلام سمت سرور انجام می‌گیرد.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

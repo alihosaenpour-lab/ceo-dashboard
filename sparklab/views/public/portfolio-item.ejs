@@ -1,0 +1,61 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><a href="/portfolio">نمونه‌کارها</a><span class="sep">/</span><span><%= item.title %></span></nav>
+</div>
+
+<section class="section-tight" style="padding-top:.5rem;padding-bottom:4rem">
+  <div class="container">
+    <div class="gallery-main mb-3"><img src="<%= item.cover_image %>" alt="<%= item.title %>"></div>
+    <div class="product-layout">
+      <div>
+        <span class="eyebrow"><%= item.client_label %></span>
+        <h1 class="h2 mb-2"><%= item.title %></h1>
+        <p class="muted"><%= item.summary %></p>
+        <% if (item.result_metric) { %>
+          <div class="alert ok mt-3"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.3rem"><path d="M3 3v18h18"/><path d="M7 15l4-6 3 4 5-8"/></svg><span><b>نتیجه:</b> <%= item.result_metric %></span></div>
+        <% } %>
+        <% if (item.problem_text) { %>
+          <div class="card mt-3">
+            <h3 class="h3 mb-1" style="color:var(--bad)">مسئله</h3>
+            <p class="muted small"><%= item.problem_text %></p>
+          </div>
+        <% } %>
+        <% if (item.solution_text) { %>
+          <div class="card mt-2">
+            <h3 class="h3 mb-1" style="color:var(--ok)">راه‌حل ما</h3>
+            <p class="muted small"><%= item.solution_text %></p>
+          </div>
+        <% } %>
+        <% if (item.features && item.features.length) { %>
+          <div class="card mt-2">
+            <h3 class="h3 mb-2">امکانات کلیدی</h3>
+            <ul class="check-list">
+              <% item.features.forEach(function (f) { %>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span><%= f %></span></li>
+              <% }); %>
+            </ul>
+          </div>
+        <% } %>
+      </div>
+      <aside>
+        <div class="card buy-box">
+          <h4 class="small" style="color:var(--cyan)">فناوری‌های استفاده‌شده</h4>
+          <div class="tech-chips mt-2">
+            <% (item.tech || []).forEach(function (t) { %><span class="chip"><%= t %></span><% }); %>
+          </div>
+          <% if (item.url) { %>
+            <a class="btn btn-ghost btn-block mt-3" href="<%= item.url %>" target="_blank" rel="noopener nofollow">مشاهده پروژه</a>
+          <% } %>
+          <hr class="divider">
+          <h4 class="small" style="color:var(--cyan)">پروژه مشابهی در ذهن دارید؟</h4>
+          <p class="small muted mt-1">نیازتان را بنویسید تا بررسی و برآورد رایگان دریافت کنید.</p>
+          <a class="btn btn-primary btn-block mt-2" href="/projects/new">ثبت سفارش پروژه</a>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

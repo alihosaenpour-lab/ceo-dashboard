@@ -1,0 +1,90 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title"><h1>پرسش‌های متداول</h1></div>
+      <div class="grid grid-2 mb-3" style="grid-template-columns:400px 1fr;align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-3">پرسش جدید</h2>
+          <form method="POST" action="/admin/content/faqs/new">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-group">
+              <label class="form-label">پرسش <span class="req">*</span></label>
+              <input class="input" name="question" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">پاسخ <span class="req">*</span></label>
+              <textarea class="textarea" name="answer" style="min-height:120px" required></textarea>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">گروه</label>
+                <input class="input" name="group_name" value="عمومی">
+              </div>
+              <div class="form-group">
+                <label class="form-label">ترتیب</label>
+                <input class="input" name="sort_order" type="number" value="0">
+              </div>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">افزودن</button>
+          </form>
+        </div>
+        <div>
+          <% faqs.forEach(function (f) { %>
+            <details class="faq-item">
+              <summary>
+                <span class="flex" style="gap:.6rem">
+                  <span class="pill pill-cyan"><%= f.group_name %></span>
+                  <%= f.question %>
+                  <% if (!f.is_active) { %><span class="status muted">غیرفعال</span><% } %>
+                </span>
+              </summary>
+              <div class="faq-a">
+                <form method="POST" action="/admin/content/faqs/<%= f.id %>/edit">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <div class="form-group">
+                    <label class="form-label tiny">پرسش</label>
+                    <input class="input" name="question" value="<%= f.question %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label tiny">پاسخ</label>
+                    <textarea class="textarea" name="answer" style="min-height:100px"><%= f.answer %></textarea>
+                  </div>
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label class="form-label tiny">گروه</label>
+                      <input class="input" name="group_name" value="<%= f.group_name %>">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label tiny">ترتیب</label>
+                      <input class="input" name="sort_order" type="number" value="<%= f.sort_order %>">
+                    </div>
+                  </div>
+                  <div class="flex-between">
+                    <label class="check-row"><input type="checkbox" name="is_active" value="1" <%= f.is_active ? 'checked' : '' %>> فعال</label>
+                    <span class="flex" style="gap:.4rem">
+                      <button class="btn btn-primary btn-sm" type="submit">ذخیره</button>
+                    </span>
+                  </div>
+                </form>
+                <form method="POST" action="/admin/content/faqs/<%= f.id %>/delete" data-confirm="حذف این پرسش؟" class="mt-1">
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <button class="btn btn-danger btn-sm" type="submit">حذف پرسش</button>
+                </form>
+              </div>
+            </details>
+          <% }); %>
+          <% if (!faqs.length) { %><p class="small muted">پرسشی ثبت نشده است.</p><% } %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

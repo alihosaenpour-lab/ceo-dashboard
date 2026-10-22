@@ -1,0 +1,83 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1>گزارش فروش</h1>
+        <form method="GET" action="/admin/reports" class="flex">
+          <select class="select" name="days" style="width:auto" onchange="this.form.submit()">
+            <% [7, 30, 90, 180].forEach(function (d) { %>
+              <option value="<%= d %>" <%= days === d ? 'selected' : '' %>><%= h.fmtMoney(d) %> روز اخیر</option>
+            <% }); %>
+          </select>
+        </form>
+      </div>
+
+      <div class="stat-grid mb-3">
+        <div class="card stat-card accent"><span class="sc-label">درآمد دوره</span><span class="sc-value"><%= h.fmtMoney(totals.revenue) %></span><span class="sc-sub">تومان</span></div>
+        <div class="card stat-card"><span class="sc-label">سفارش پرداخت‌شده</span><span class="sc-value"><%= h.fmtMoney(totals.orders) %></span></div>
+        <div class="card stat-card"><span class="sc-label">درخواست پروژه</span><span class="sc-value"><%= h.fmtMoney(projectStats.total) %></span><span class="sc-sub"><%= h.fmtMoney(projectStats.received) %> جدید · <%= h.fmtMoney(projectStats.in_progress) %> در اجرا</span></div>
+        <div class="card stat-card"><span class="sc-label">ارزش پروژه‌های تصویب‌شده</span><span class="sc-value"><%= h.fmtMoney(projectStats.pipeline_value || 0) %></span><span class="sc-sub">برآورد تجمیعی — تومان</span></div>
+      </div>
+
+      <div class="grid grid-2 mb-3" style="align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-2">محصولات پرفروش دوره</h2>
+          <div class="table-wrap" style="border:0">
+            <table class="tbl" style="min-width:0">
+              <thead><tr><th>محصول</th><th>تعداد</th><th>درآمد</th></tr></thead>
+              <tbody>
+                <% topProducts.forEach(function (p) { %>
+                  <tr>
+                    <td class="small"><%= p.title %></td>
+                    <td class="num small"><%= h.fmtMoney(p.qty) %></td>
+                    <td class="num small"><b><%= h.fmtMoney(p.revenue) %></b></td>
+                  </tr>
+                <% }); %>
+                <% if (!topProducts.length) { %><tr><td colspan="3" class="small muted">فروشی در این دوره ثبت نشده است.</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <h2 class="h3 mb-2">تفکیک درگاه پرداخت</h2>
+          <div class="table-wrap" style="border:0">
+            <table class="tbl" style="min-width:0">
+              <thead><tr><th>درگاه</th><th>تراکنش موفق</th><th>مبلغ</th></tr></thead>
+              <tbody>
+                <% byGateway.forEach(function (g) { %>
+                  <tr>
+                    <td><%= g.gateway === 'test' ? 'آزمایشی ⚠' : (g.gateway === 'zarinpal' ? 'زرین‌پال' : (g.gateway || '—')) %></td>
+                    <td class="num"><%= h.fmtMoney(g.c) %></td>
+                    <td class="num"><%= h.fmtMoney(g.s) %> تومان</td>
+                  </tr>
+                <% }); %>
+                <% if (!byGateway.length) { %><tr><td colspan="3" class="small muted">تراکنش موفقی ثبت نشده است.</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+          <p class="tiny faint mt-2">تراکنش‌های «آزمایشی» از درگاه تست محلی هستند و نباید در گزارش درآمد واقعی لحاظ شوند.</p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 class="h3 mb-2">وضعیت درخواست‌های پروژه</h2>
+        <div class="stat-grid">
+          <div class="stat-card card" style="background:var(--bg-1)"><span class="sc-label">دریافت شده</span><span class="sc-value"><%= h.fmtMoney(projectStats.received) %></span></div>
+          <div class="stat-card card" style="background:var(--bg-1)"><span class="sc-label">بررسی/برآورد</span><span class="sc-value"><%= h.fmtMoney(projectStats.reviewing) %></span></div>
+          <div class="stat-card card" style="background:var(--bg-1)"><span class="sc-label">تأیید شده</span><span class="sc-value"><%= h.fmtMoney(projectStats.approved) %></span></div>
+          <div class="stat-card card" style="background:var(--bg-1)"><span class="sc-label">در حال اجرا</span><span class="sc-value"><%= h.fmtMoney(projectStats.in_progress) %></span></div>
+          <div class="stat-card card" style="background:var(--bg-1)"><span class="sc-label">تحویل/تکمیل</span><span class="sc-value"><%= h.fmtMoney(projectStats.done) %></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

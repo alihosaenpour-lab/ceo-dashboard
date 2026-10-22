@@ -1,0 +1,111 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side', { sideCounts: { pendingOrders: stats.pendingOrders, openProjects: stats.openProjects, unreadMessages: stats.unreadMessages } }) %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <% if (!gw.connected) { %>
+        <div class="alert bad mb-3">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+          <span><b>درگاه پرداخت متصل نیست.</b> <%= gw.detail %> تا اتصال درگاه، خرید در سایت مسدود است و وضعیت به‌صورت شفاف به کاربر نمایش داده می‌شود. <a href="/admin/settings" style="color:inherit;text-decoration:underline">پیکربندی درگاه ←</a></span>
+        </div>
+      <% } else if (gw.test) { %>
+        <div class="alert warn mb-3">
+          <span><b>حالت آزمایشی:</b> <%= gw.detail %> پیش از بهره‌برداری واقعی، درگاه معتبر (زرین‌پال) را در <a href="/admin/settings" style="color:inherit;text-decoration:underline">تنظیمات</a> فعال کنید.</span>
+        </div>
+      <% } %>
+      <% if (!mail.configured) { %>
+        <div class="alert info mb-3">
+          <span><b>ایمیل (SMTP) پیکربندی نشده است.</b> اطلاع‌رسانی‌های ایمیلی ارسال نمی‌شوند؛ لینک بازیابی رمز در لاگ سرور ثبت می‌شود. برای فعال‌سازی، متغیرهای SMTP را در فایل .env تنظیم کنید.</span>
+        </div>
+      <% } %>
+
+      <div class="stat-grid mb-3">
+        <div class="card stat-card accent"><span class="sc-label">درآمد ۳۰ روز اخیر</span><span class="sc-value"><%= h.fmtMoney(stats.revenue30d) %> <small style="font-size:.6em"><%= settings.currency %></small></span><span class="sc-sub"><%= h.fmtMoney(stats.orders30d) %> سفارش ثبت‌شده</span></div>
+        <div class="card stat-card"><span class="sc-label">سفارش پرداخت‌شده (کل)</span><span class="sc-value"><%= h.fmtMoney(stats.paidOrders) %></span><span class="sc-sub"><%= h.fmtMoney(stats.downloads) %> دانلود فایل</span></div>
+        <div class="card stat-card"><span class="sc-label">در انتظار پرداخت</span><span class="sc-value" style="color:var(--warn)"><%= h.fmtMoney(stats.pendingOrders) %></span><span class="sc-sub"><%= h.fmtMoney(stats.failedPayments) %> پرداخت ناموفق ۳۰ روز</span></div>
+        <div class="card stat-card"><span class="sc-label">کاربران</span><span class="sc-value"><%= h.fmtMoney(stats.users) %></span><span class="sc-sub">+<%= h.fmtMoney(stats.newUsers30d) %> در ۳۰ روز اخیر</span></div>
+        <div class="card stat-card"><span class="sc-label">پروژه‌های باز</span><span class="sc-value"><%= h.fmtMoney(stats.openProjects) %></span><span class="sc-sub">+<%= h.fmtMoney(stats.newProjects7d) %> درخواست ۷ روز اخیر</span></div>
+        <div class="card stat-card"><span class="sc-label">محصولات فعال</span><span class="sc-value"><%= h.fmtMoney(stats.products) %></span><span class="sc-sub"><a href="/admin/products" class="small">مدیریت ←</a></span></div>
+      </div>
+
+      <div class="card mb-3">
+        <div class="flex-between mb-2"><h2 class="h3">درآمد ۱۴ روز اخیر (سفارش‌های پرداخت‌شده)</h2><a class="small" href="/admin/reports">گزارش کامل ←</a></div>
+        <% const maxRev = Math.max(...series.map(function (s) { return s.revenue; }), 1); %>
+        <div class="bar-chart">
+          <% series.forEach(function (s) { %>
+            <div class="bar-col" title="<%= s.label %> — <%= h.fmtMoney(s.revenue) %> تومان (<%= h.fmtMoney(s.count) %> سفارش)">
+              <div class="bar" style="height:<%= Math.max(2, Math.round((s.revenue / maxRev) * 100)) %>%"></div>
+              <span class="bar-label"><%= s.label %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-3" style="align-items:start">
+        <div class="card">
+          <div class="flex-between mb-2"><h2 class="h3">آخرین سفارش‌ها</h2><a class="small" href="/admin/orders">همه ←</a></div>
+          <div class="table-wrap" style="border:0">
+            <table class="tbl" style="min-width:0">
+              <tbody>
+                <% recentOrders.forEach(function (o) { %>
+                  <tr>
+                    <td style="direction:ltr;text-align:right" class="num"><a href="/admin/orders/<%= o.order_no %>"><%= o.order_no %></a></td>
+                    <td class="small"><%= o.buyer_name %></td>
+                    <td class="num small"><%= h.fmtMoney(o.total) %></td>
+                    <td><span class="status <%= h.statusClass(o.status) %>"><%= h.statusLabel(o.status) %></span></td>
+                  </tr>
+                <% }); %>
+                <% if (!recentOrders.length) { %><tr><td class="small muted">سفارشی ثبت نشده است.</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="flex-between mb-2"><h2 class="h3">درخواست‌های پروژه اخیر</h2><a class="small" href="/admin/projects">همه ←</a></div>
+          <div class="table-wrap" style="border:0">
+            <table class="tbl" style="min-width:0">
+              <tbody>
+                <% recentProjects.forEach(function (p) { %>
+                  <tr>
+                    <td class="num" style="direction:ltr;text-align:right"><a href="/admin/projects/<%= p.id %>"><%= p.ref_no %></a></td>
+                    <td class="small"><%= p.title %></td>
+                    <td><span class="status <%= h.statusClass(p.status) %>"><%= h.statusLabel(p.status) %></span></td>
+                  </tr>
+                <% }); %>
+                <% if (!recentProjects.length) { %><tr><td class="small muted">درخواستی ثبت نشده است.</td></tr><% } %>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-2">پرفروش‌ترین محصولات</h2>
+          <% bestsellers.forEach(function (p, i) { %>
+            <div class="flex-between" style="padding:.55rem 0;border-bottom:1px dashed var(--border)">
+              <span class="small flex" style="gap:.6rem"><b class="faint"><%= h.fmtMoney(i + 1) %>.</b> <a href="/admin/products/<%= p.id %>/edit"><%= p.title %></a></span>
+              <span class="tiny faint"><%= h.fmtMoney(p.sales_count) %> فروش</span>
+            </div>
+          <% }); %>
+        </div>
+        <div class="card">
+          <div class="flex-between mb-2"><h2 class="h3">آخرین رویدادهای امنیتی</h2><a class="small" href="/admin/audit">لاگ کامل ←</a></div>
+          <% recentAudit.forEach(function (a) { %>
+            <div class="tiny" style="padding:.4rem 0;border-bottom:1px dashed var(--border)">
+              <span class="code-inline" style="font-size:.7rem"><%= a.action %></span>
+              <span class="faint"> · <%= a.actor_role || 'guest' %> · <%= h.fmtDate(a.created_at) %></span>
+            </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

@@ -1,0 +1,52 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <form method="POST" action="/admin/content/pages/<%= page.id %>/edit">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="grid grid-2" style="grid-template-columns:1fr 320px;align-items:start">
+          <div class="card">
+            <div class="form-group">
+              <label class="form-label">عنوان صفحه <span class="req">*</span></label>
+              <input class="input <%= errors.title ? 'invalid' : '' %>" name="title" value="<%= values.title || '' %>" required>
+              <% if (errors.title) { %><span class="form-error"><%= errors.title %></span><% } %>
+            </div>
+            <div class="form-group">
+              <label class="form-label">محتوا (HTML) <span class="tiny faint">— برای امنیت، تگ‌های غیرمجاز حذف می‌شوند</span></label>
+              <textarea class="textarea" name="body_html" style="min-height:480px;font-family:ui-monospace,monospace;font-size:.82rem;direction:ltr;text-align:left"><%= values.body_html || '' %></textarea>
+            </div>
+          </div>
+          <aside class="card">
+            <button class="btn btn-primary btn-block btn-lg" type="submit">ذخیره صفحه</button>
+            <a class="btn btn-ghost btn-block mt-2" href="/p/<%= page.slug %>" target="_blank">مشاهده در سایت ↗</a>
+            <hr class="divider">
+            <div class="form-group">
+              <label class="form-label">عنوان سئو (meta title)</label>
+              <input class="input" name="meta_title" value="<%= values.meta_title || '' %>">
+            </div>
+            <div class="form-group">
+              <label class="form-label">توضیحات سئو (meta description)</label>
+              <textarea class="textarea" name="meta_description" style="min-height:70px"><%= values.meta_description || '' %></textarea>
+            </div>
+            <div class="check-row mb-2">
+              <input type="checkbox" id="ck-f" name="show_in_footer" value="1" <%= page.show_in_footer ? 'checked' : '' %>>
+              <label for="ck-f">در فوتر سایت نمایش داده شود</label>
+            </div>
+            <div class="check-row">
+              <input type="checkbox" id="ck-a" name="is_active" value="1" <%= page.is_active ? 'checked' : '' %>>
+              <label for="ck-a">فعال (قابل دسترسی عمومی)</label>
+            </div>
+          </aside>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

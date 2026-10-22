@@ -1,0 +1,77 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <form method="GET" action="/admin/users" class="search-inline">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input class="input" type="search" name="q" value="<%= q %>" placeholder="نام، ایمیل یا موبایل…">
+        </form>
+        <span class="small faint"><%= h.fmtMoney(users.length) %> کاربر</span>
+      </div>
+      <div class="alert info mb-3"><span>نقش‌ها: <b>admin</b> — دسترسی کامل شامل تنظیمات و کاربران · <b>staff</b> — مدیریت محتوا، محصولات، سفارش‌ها و پروژه‌ها بدون دسترسی به تنظیمات/کاربران · <b>customer</b> — مشتری.</span></div>
+      <div class="table-wrap">
+        <table class="tbl">
+          <thead><tr><th>#</th><th>کاربر</th><th>تماس</th><th>سفارش‌ها</th><th>مجموع خرید</th><th>نقش</th><th>وضعیت</th><th>عملیات</th></tr></thead>
+          <tbody>
+            <% users.forEach(function (u) { %>
+              <tr>
+                <td class="num"><%= h.fmtMoney(u.id) %></td>
+                <td>
+                  <b class="small"><%= u.name %></b>
+                  <% if (u.id === currentUser.id) { %><span class="pill pill-cyan">شما</span><% } %>
+                  <div class="tiny faint"><%= h.fmtDate(u.created_at, { time: false }) %> · آخرین ورود: <%= u.last_login_at ? h.fmtDate(u.last_login_at) : '—' %></div>
+                </td>
+                <td class="small"><span style="direction:ltr;display:inline-block"><%= u.email %></span><br><span class="tiny faint" style="direction:ltr;display:inline-block"><%= u.phone || '—' %></span></td>
+                <td class="num"><%= h.fmtMoney(u.orders_count) %></td>
+                <td class="num small"><%= u.paid_total ? h.fmtMoney(u.paid_total) + ' تومان' : '—' %></td>
+                <td>
+                  <form method="POST" action="/admin/users/<%= u.id %>/role" class="flex" style="gap:.3rem">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <select class="select" name="role" style="width:auto;padding:.3rem 2rem .3rem .6rem;font-size:.78rem">
+                      <option value="customer" <%= u.role === 'customer' ? 'selected' : '' %>>مشتری</option>
+                      <option value="staff" <%= u.role === 'staff' ? 'selected' : '' %>>کارشناس (staff)</option>
+                      <option value="admin" <%= u.role === 'admin' ? 'selected' : '' %>>مدیر (admin)</option>
+                    </select>
+                    <button class="btn btn-ghost btn-sm" type="submit" <%= u.id === currentUser.id ? 'disabled' : '' %>>ثبت</button>
+                  </form>
+                </td>
+                <td>
+                  <form method="POST" action="/admin/users/<%= u.id %>/toggle">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button type="submit" class="status <%= u.is_active ? 'ok' : 'bad' %>" style="border:0;cursor:pointer;font-family:inherit" <%= u.id === currentUser.id ? 'disabled' : '' %>><%= u.is_active ? 'فعال' : 'غیرفعال' %></button>
+                  </form>
+                </td>
+                <td>
+                  <details style="position:relative">
+                    <summary class="btn btn-ghost btn-sm" style="cursor:pointer;list-style:none">بیشتر ▾</summary>
+                    <div class="card" style="position:absolute;left:0;top:110%;z-index:20;width:230px;padding:1rem;background:var(--bg-3)">
+                      <form method="POST" action="/admin/users/<%= u.id %>/reset-password" class="mb-2">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <label class="form-label tiny">بازنشانی رمز</label>
+                        <input class="input" name="new_password" type="text" minlength="8" placeholder="رمز جدید (حداقل ۸)" style="padding:.35rem .6rem;font-size:.8rem">
+                        <button class="btn btn-ghost btn-sm btn-block mt-1" type="submit" data-confirm="رمز کاربر بازنشانی و همه نشست‌هایش باطل شود؟">بازنشانی رمز</button>
+                      </form>
+                      <form method="POST" action="/admin/users/<%= u.id %>/delete" data-confirm="حذف کاربر «<%= u.name %>»؟ کاربران دارای سفارش فقط غیرفعال می‌شوند.">
+                        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                        <button class="btn btn-danger btn-sm btn-block" type="submit" <%= u.id === currentUser.id ? 'disabled' : '' %>>حذف کاربر</button>
+                      </form>
+                    </div>
+                  </details>
+                </td>
+              </tr>
+            <% }); %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

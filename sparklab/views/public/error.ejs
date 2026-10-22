@@ -1,0 +1,18 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="section">
+  <div class="container-sm">
+    <div class="card card-pad-lg text-center">
+      <div class="grad-text" style="font-size:4rem;font-weight:900;line-height:1"><%= typeof code !== 'undefined' ? code : '۵۰۰' %></div>
+      <h1 class="h2 mt-2 mb-1"><%= typeof title !== 'undefined' ? title : 'خطا' %></h1>
+      <p class="muted"><%= typeof message !== 'undefined' ? message : 'خطای غیرمنتظره رخ داد.' %></p>
+      <div class="flex mt-4" style="justify-content:center;flex-wrap:wrap">
+        <a class="btn btn-primary" href="/">بازگشت به صفحه اصلی</a>
+        <a class="btn btn-ghost" href="/contact">تماس با پشتیبانی</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

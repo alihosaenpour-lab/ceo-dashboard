@@ -1,0 +1,36 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><span>پرسش‌های متداول</span></nav>
+    <h1>پرسش‌های متداول</h1>
+    <p>پاسخ سؤالات پرتکرار درباره خرید، تحویل فایل، پشتیبانی و سفارش پروژه. سؤال دیگری دارید؟ <a href="/contact">با ما تماس بگیرید</a>.</p>
+  </div>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container-sm">
+    <% Object.keys(groups).forEach(function (g) { %>
+      <h2 class="faq-group-title"><%= g %></h2>
+      <% groups[g].forEach(function (f) { %>
+        <details class="faq-item">
+          <summary><%= f.question %></summary>
+          <div class="faq-a"><%= f.answer %></div>
+        </details>
+      <% }); %>
+    <% }); %>
+  </div>
+</section>
+
+<script type="application/ld+json" nonce="<%= cspNonce %>">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": faqs.map(function (f) {
+    return { "@type": "Question", "name": f.question, "acceptedAnswer": { "@type": "Answer", "text": f.answer } };
+  })
+}) %>
+</script>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 84" fill="none">
+  <defs>
+    <linearGradient id="lg-hexg" x1="10" y1="6" x2="74" y2="78" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE"/>
+      <stop offset="0.55" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#6366F1"/>
+    </linearGradient>
+    <linearGradient id="lg-bolt" x1="34" y1="16" x2="52" y2="68" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F8FAFC"/>
+      <stop offset="1" stop-color="#BAE6FD"/>
+    </linearGradient>
+  </defs>
+  <path d="M42 5 72.5 22.5v35L42 75 11.5 57.5v-35L42 5Z" fill="#0B1220" stroke="url(#lg-hexg)" stroke-width="4"/>
+  <path d="M46.8 16 29.5 43.6h10.8L37.8 68 55.5 39.8h-11.2L46.8 16Z" fill="url(#lg-bolt)"/>
+  <text x="92" y="42" font-family="Segoe UI, Helvetica, Arial, sans-serif" font-size="27" font-weight="800" fill="#F1F5F9" letter-spacing="1.5">SPARK<tspan fill="#22D3EE">LAB</tspan></text>
+  <text x="92" y="66" font-family="Tahoma, sans-serif" font-size="15" fill="#7DD3FC">اسپارک لب</text>
+</svg>

@@ -1,0 +1,27 @@
+{
+  "name": "sparklab-platform",
+  "version": "1.0.0",
+  "description": "Spark Lab | اسپارک لب — پلتفرم فروش محصولات دیجیتال و سفارش پروژه",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "seed": "node --disable-warning=ExperimentalWarning src/seed.js",
+    "test": "node --disable-warning=ExperimentalWarning tests/acceptance.js"
+  },
+  "engines": { "node": ">=20" },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "compression": "^1.7.4",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.0",
+    "express-session": "^1.18.0",
+    "helmet": "^8.0.0",
+    "multer": "^2.0.1",
+    "nodemailer": "^6.9.15",
+    "sanitize-html": "^2.13.0",
+    "vazirmatn": "^33.0.3"
+  }
+}

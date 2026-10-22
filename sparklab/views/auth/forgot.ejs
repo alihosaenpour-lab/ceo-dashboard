@@ -1,0 +1,25 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="section">
+  <div class="container" style="max-width:460px">
+    <div class="card card-pad-lg">
+      <h1 class="h2 mb-1">بازیابی رمز عبور</h1>
+      <p class="muted small mb-3">ایمیل حساب خود را وارد کنید تا لینک بازنشانی رمز برایتان ارسال شود.</p>
+      <% if (info) { %><div class="alert ok mb-3"><span><%= info %></span></div><% } %>
+      <form method="POST" action="/auth/forgot">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <div class="form-group">
+          <label class="form-label" for="f-email">ایمیل</label>
+          <input class="input <%= errors.email ? 'invalid' : '' %>" id="f-email" name="email" type="email" dir="ltr" style="text-align:left" value="<%= values.email || '' %>" required autofocus>
+          <% if (errors.email) { %><span class="form-error"><%= errors.email %></span><% } %>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">ارسال لینک بازیابی</button>
+      </form>
+      <hr class="divider">
+      <p class="small muted text-center"><a href="/auth/login">بازگشت به صفحه ورود</a></p>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

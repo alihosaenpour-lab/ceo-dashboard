@@ -1,0 +1,93 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="grid grid-2 mb-3" style="grid-template-columns:400px 1fr;align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-3">کد تخفیف جدید</h2>
+          <form method="POST" action="/admin/coupons/new">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">کد <span class="req">*</span></label>
+                <input class="input <%= errors.code ? 'invalid' : '' %>" name="code" dir="ltr" style="text-align:left;text-transform:uppercase" value="<%= values.code || '' %>" placeholder="SUMMER20" required>
+                <% if (errors.code) { %><span class="form-error"><%= errors.code %></span><% } %>
+              </div>
+              <div class="form-group">
+                <label class="form-label">نوع <span class="req">*</span></label>
+                <select class="select" name="type">
+                  <option value="percent" <%= values.type === 'percent' ? 'selected' : '' %>>درصدی</option>
+                  <option value="fixed" <%= values.type === 'fixed' ? 'selected' : '' %>>مبلغ ثابت (تومان)</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">مقدار <span class="req">*</span></label>
+                <input class="input <%= errors.value ? 'invalid' : '' %>" name="value" type="number" min="1" value="<%= values.value || '' %>" required>
+                <% if (errors.value) { %><span class="form-error"><%= errors.value %></span><% } %>
+              </div>
+              <div class="form-group">
+                <label class="form-label">حداقل مبلغ سفارش</label>
+                <input class="input" name="min_total" type="number" min="0" value="<%= values.min_total || 0 %>">
+              </div>
+            </div>
+            <div class="form-row">
+              <div class="form-group">
+                <label class="form-label">سقف تخفیف (برای درصدی)</label>
+                <input class="input" name="max_discount" type="number" min="1" value="<%= values.max_discount || '' %>">
+              </div>
+              <div class="form-group">
+                <label class="form-label">سقف تعداد استفاده</label>
+                <input class="input" name="max_uses" type="number" min="1" value="<%= values.max_uses || '' %>" placeholder="نامحدود">
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">انقضا</label>
+              <input class="input" name="expires_at" type="date" value="<%= values.expires_at ? values.expires_at.slice(0,10) : '' %>">
+              <% if (errors.expires_at) { %><span class="form-error"><%= errors.expires_at %></span><% } %>
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">ایجاد کد تخفیف</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>کد</th><th>نوع</th><th>شرط</th><th>استفاده</th><th>انقضا</th><th>وضعیت</th><th></th></tr></thead>
+            <tbody>
+              <% coupons.forEach(function (c) { %>
+                <tr>
+                  <td class="num" style="direction:ltr;text-align:right"><b><%= c.code %></b></td>
+                  <td class="small"><%= c.type === 'percent' ? h.fmtMoney(c.value) + '٪' : h.fmtMoney(c.value) + ' تومان' %><% if (c.max_discount) { %> <span class="tiny faint">(سقف <%= h.fmtMoney(c.max_discount) %>)</span><% } %></td>
+                  <td class="tiny"><%= c.min_total ? 'حداقل ' + h.fmtMoney(c.min_total) + ' تومان' : 'بدون شرط' %></td>
+                  <td class="num small"><%= h.fmtMoney(c.used_count) %><%= c.max_uses ? ' از ' + h.fmtMoney(c.max_uses) : '' %></td>
+                  <td class="tiny"><%= c.expires_at ? h.fmtDate(c.expires_at, { time: false }) : '—' %></td>
+                  <td>
+                    <form method="POST" action="/admin/coupons/<%= c.id %>/toggle">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button type="submit" class="status <%= c.is_active ? 'ok' : 'muted' %>" style="border:0;cursor:pointer;font-family:inherit"><%= c.is_active ? 'فعال' : 'غیرفعال' %></button>
+                    </form>
+                  </td>
+                  <td>
+                    <form method="POST" action="/admin/coupons/<%= c.id %>/delete" data-confirm="حذف کد «<%= c.code %>»؟">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                      <button class="btn btn-danger btn-sm" type="submit">حذف</button>
+                    </form>
+                  </td>
+                </tr>
+              <% }); %>
+              <% if (!coupons.length) { %><tr><td colspan="7" class="small muted text-center" style="padding:2rem">کد تخفیفی تعریف نشده است.</td></tr><% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

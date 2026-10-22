@@ -1,0 +1,57 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="section">
+  <div class="container-sm">
+    <div class="card card-pad-lg text-center">
+      <% if (ok) { %>
+        <div class="feature-icon" style="margin:0 auto 1rem;width:72px;height:72px;background:rgba(52,211,153,.12);border-color:rgba(52,211,153,.4);color:var(--ok)">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg>
+        </div>
+        <h1 class="h2" style="color:var(--ok)">پرداخت با موفقیت تأیید شد</h1>
+        <p class="muted mt-2">سفارش <b style="direction:ltr;display:inline-block"><%= order.order_no %></b> نهایی شد و فایل‌های محصول در دسترس شما قرار گرفت.</p>
+        <% if (test) { %><div class="test-banner mt-3" style="margin-bottom:0">این تراکنش در محیط آزمایشی انجام شد — پولی جابه‌جا نشده است.</div><% } %>
+        <% if (!currentUser && typeof grants !== 'undefined' && grants && grants.length) { %>
+          <div class="card mt-3" style="text-align:right;background:var(--bg-1)">
+            <h2 class="h3 mb-2" style="color:var(--ok)">دانلود فایل‌ها (خرید مهمان)</h2>
+            <% grants.forEach(function (g) { %>
+              <div class="flex-between wrap" style="padding:.7rem 0;border-bottom:1px dashed var(--border);gap:.6rem">
+                <span class="small"><b><%= g.product_title %></b><br><span class="tiny faint"><%= g.original_name %> — نسخه <%= g.version %></span></span>
+                <a class="btn btn-primary btn-sm" href="/download/<%= g.token %>">دانلود</a>
+              </div>
+            <% }); %>
+            <p class="tiny faint mt-2">این لینک‌ها زمان‌دار و محدود هستند. برای دسترسی دائمی و مدیریت سفارش‌ها، یک <a href="/auth/register">حساب کاربری</a> بسازید.</p>
+          </div>
+        <% } %>
+        <div class="flex mt-4" style="justify-content:center;flex-wrap:wrap">
+          <% if (isOwner && currentUser) { %>
+            <a class="btn btn-primary" href="/account/orders/<%= order.order_no %>">مشاهده رسید و دانلودها</a>
+            <a class="btn btn-ghost" href="/account/downloads">دانلودهای من</a>
+          <% } else { %>
+            <div class="alert info text-center" style="text-align:right;max-width:480px;margin:0 auto">
+              <span>سفارش با موفقیت پرداخت شد. اگر حساب کاربری دارید، لینک دانلود در پنل حساب (بخش دانلودها) فعال است؛ در غیر این صورت لینک امن دانلود به ایمیل <b style="direction:ltr"><%= order.buyer_email %></b> اطلاع‌رسانی می‌شود. برای پیگیری سفارش <a href="/auth/login">وارد حساب خود شوید</a>.</span>
+            </div>
+          <% } %>
+        </div>
+      <% } else { %>
+        <div class="feature-icon" style="margin:0 auto 1rem;width:72px;height:72px;background:rgba(248,113,113,.12);border-color:rgba(248,113,113,.4);color:var(--bad)">
+          <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M18 6 6 18M6 6l12 12"/></svg>
+        </div>
+        <h1 class="h2" style="color:var(--bad)">پرداخت تأیید نشد</h1>
+        <p class="muted mt-2">
+          سفارش <b style="direction:ltr;display:inline-block"><%= order.order_no %></b> در وضعیت «پرداخت ناموفق» ثبت شد و <b>هیچ فایلی تحویل داده نمی‌شود</b>.
+          <% if (reason) { %><br><span class="small">دلیل: <%= reason %></span><% } %>
+        </p>
+        <% if (order.status === 'pending') { %>
+          <p class="small faint mt-1">اگر مبلغی از حساب شما کسر شده و تراکنش ناموفق بوده، معمولاً ظرف ۷۲ ساعت توسط بانک بازمی‌گردد.</p>
+        <% } %>
+        <div class="flex mt-4" style="justify-content:center;flex-wrap:wrap">
+          <a class="btn btn-primary" href="/shop">بازگشت به فروشگاه</a>
+          <a class="btn btn-ghost" href="/contact">تماس با پشتیبانی</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,134 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1 class="flex" style="gap:.8rem;flex-wrap:wrap">سفارش <span style="direction:ltr"><%= order.order_no %></span>
+          <span class="status <%= h.statusClass(order.status) %>"><%= h.statusLabel(order.status) %></span>
+        </h1>
+        <div class="flex">
+          <a class="btn btn-ghost btn-sm" href="/admin/orders">بازگشت</a>
+        </div>
+      </div>
+
+      <div class="grid grid-2" style="grid-template-columns:1fr 360px;align-items:start">
+        <div>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">اقلام</h2>
+            <% order.items.forEach(function (it) { %>
+              <div class="flex-between" style="padding:.6rem 0;border-bottom:1px dashed var(--border)">
+                <span class="small"><a href="/product/<%= it.slug %>" target="_blank"><%= it.title %></a> <span class="tiny faint">× <%= h.fmtMoney(it.qty) %> — نسخه <%= it.version %></span></span>
+                <b class="num small"><%= h.fmtMoney(it.line_total) %> <%= order.currency %></b>
+              </div>
+            <% }); %>
+            <div class="mt-2" style="max-width:300px;margin-inline-start:auto">
+              <div class="summary-row"><span>جمع</span><span class="num"><%= h.fmtMoney(order.subtotal) %></span></div>
+              <% if (order.discount_total > 0) { %><div class="summary-row"><span>تخفیف <%= order.coupon_code ? '(' + order.coupon_code + ')' : '' %></span><span class="green num">− <%= h.fmtMoney(order.discount_total) %></span></div><% } %>
+              <div class="summary-row total"><span>مبلغ نهایی</span><span class="num"><%= h.fmtMoney(order.total) %> <%= order.currency %></span></div>
+            </div>
+          </div>
+
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">تراکنش‌های پرداخت</h2>
+            <% if (!payments.length) { %><p class="small muted">تراکنشی ثبت نشده است.</p><% } %>
+            <% payments.forEach(function (p) { %>
+              <div class="card mb-2" style="background:var(--bg-1);padding:1rem">
+                <div class="flex-between wrap">
+                  <span class="flex" style="gap:.6rem">
+                    <span class="status <%= h.statusClass(p.status) %>"><%= { initiated: 'شروع شده', pending: 'در انتظار بازگشت', success: 'موفق', failed: 'ناموفق', cancelled: 'لغو شده' }[p.status] || p.status %></span>
+                    <b class="small"><%= p.gateway === 'test' ? 'درگاه آزمایشی' : (p.gateway === 'zarinpal' ? 'زرین‌پال' : p.gateway) %></b>
+                    <span class="num small"><%= h.fmtMoney(p.amount) %> تومان</span>
+                  </span>
+                  <span class="tiny faint"><%= h.fmtDate(p.created_at) %></span>
+                </div>
+                <dl class="kv tiny mt-2" style="grid-template-columns:130px 1fr">
+                  <% if (p.authority) { %><dt>Authority</dt><dd style="direction:ltr;text-align:right;word-break:break-all"><%= String(p.authority).slice(0, 60) %><%= String(p.authority).length > 60 ? '…' : '' %></dd><% } %>
+                  <% if (p.ref_id) { %><dt>Ref ID</dt><dd style="direction:ltr;text-align:right"><%= p.ref_id %></dd><% } %>
+                  <% if (p.verified_at) { %><dt>تأیید در</dt><dd><%= h.fmtDate(p.verified_at) %></dd><% } %>
+                  <% if (p.fail_reason) { %><dt>دلیل خطا</dt><dd style="color:var(--bad)"><%= p.fail_reason %></dd><% } %>
+                </dl>
+              </div>
+            <% }); %>
+            <p class="tiny faint">وضعیت «پرداخت‌شده» فقط از مسیر تأیید سمت سرور درگاه قابل ثبت است؛ از این پنل نمی‌توان سفارش را دستی paid کرد.</p>
+          </div>
+
+          <% if (logs.length) { %>
+            <div class="card">
+              <h2 class="h3 mb-2">سوابق دانلود</h2>
+              <div class="table-wrap">
+                <table class="tbl">
+                  <thead><tr><th>زمان</th><th>کاربر</th><th>IP</th></tr></thead>
+                  <tbody>
+                    <% logs.forEach(function (l) { %>
+                      <tr><td class="tiny"><%= h.fmtDate(l.created_at) %></td><td class="num small">#<%= l.user_id || 'مهمان' %></td><td class="tiny" style="direction:ltr;text-align:right"><%= l.ip %></td></tr>
+                    <% }); %>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          <% } %>
+        </div>
+
+        <aside>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">خریدار</h2>
+            <dl class="kv" style="grid-template-columns:90px 1fr">
+              <dt>نام</dt><dd><%= order.buyer_name %></dd>
+              <dt>ایمیل</dt><dd style="font-size:.8rem"><%= order.buyer_email %></dd>
+              <dt>موبایل</dt><dd style="direction:ltr;text-align:right"><%= order.buyer_phone || '—' %></dd>
+              <dt>حساب</dt><dd><% if (user) { %>کاربر #<%= user.id %> — <%= user.role %><% } else { %>مهمان<% } %></dd>
+            </dl>
+          </div>
+          <div class="card mb-3">
+            <h2 class="h3 mb-2">مدیریت وضعیت</h2>
+            <form method="POST" action="/admin/orders/<%= order.order_no %>/status">
+              <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+              <div class="form-group">
+                <label class="form-label">وضعیت جدید</label>
+                <select class="select" name="status">
+                  <% ['pending','cancelled','refunded','failed'].forEach(function (s) { %>
+                    <option value="<%= s %>" <%= order.status === s ? 'selected' : '' %>><%= h.statusLabel(s) %><%= s === 'paid' ? '' : '' %></option>
+                  <% }); %>
+                </select>
+                <span class="form-hint">«پرداخت‌شده» فقط توسط درگاه قابل تنظیم است.</span>
+              </div>
+              <div class="form-group">
+                <label class="form-label">یادداشت (اختیاری)</label>
+                <input class="input" name="note" maxlength="300">
+              </div>
+              <button class="btn btn-primary btn-block" type="submit" data-confirm>ثبت وضعیت</button>
+            </form>
+          </div>
+          <div class="card">
+            <h2 class="h3 mb-2">لینک‌های دانلود</h2>
+            <% if (!grants.length) { %><p class="small muted">دسترسی دانلودی ایجاد نشده (سفارش پرداخت‌شده نیست یا محصول فایل ندارد).</p><% } %>
+            <% grants.forEach(function (g) { %>
+              <div class="mb-2" style="padding:.7rem;background:var(--bg-1);border-radius:10px">
+                <b class="small"><%= g.product_title %></b>
+                <div class="tiny faint">توکن: <span style="direction:ltr;display:inline-block"><%= g.token.slice(0, 10) %>…</span> ·
+                  <%= g.downloads_count %><%= g.max_downloads ? ' از ' + g.max_downloads : '' %> دانلود ·
+                  انقضا: <%= g.expires_at ? h.fmtDate(g.expires_at) : '—' %> ·
+                  <%= g.revoked ? 'لغو شده' : 'فعال' %></div>
+                <div class="flex mt-1" style="gap:.4rem">
+                  <form method="POST" action="/admin/orders/grants/<%= g.id %>/regenerate">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                    <button class="btn btn-ghost btn-sm" type="submit">صدور لینک تازه</button>
+                  </form>
+                  <a class="btn btn-outline btn-sm" href="/download/<%= g.token %>" target="_blank">تست لینک ↗</a>
+                </div>
+              </div>
+            <% }); %>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

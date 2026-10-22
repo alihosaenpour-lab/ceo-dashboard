@@ -1,0 +1,141 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <nav class="breadcrumbs" aria-label="مسیر">
+    <a href="/">خانه</a><span class="sep">/</span>
+    <a href="/shop">فروشگاه</a><span class="sep">/</span>
+    <% if (product.category_slug) { %><a href="/shop?category=<%= product.category_slug %>"><%= product.category_name %></a><span class="sep">/</span><% } %>
+    <span><%= product.title %></span>
+  </nav>
+</div>
+
+<section class="section-tight" style="padding-top:.5rem;padding-bottom:3rem">
+  <div class="container">
+    <div class="product-layout">
+      <!-- gallery + tabs -->
+      <div>
+        <div class="gallery-main">
+          <img id="gallery-main-img" src="<%= product.images[0] || product.cover_image %>" alt="<%= product.title %>" width="800" height="600">
+        </div>
+        <% if (product.images.length > 1) { %>
+          <div class="gallery-thumbs">
+            <% product.images.forEach(function (img, i) { %>
+              <button data-src="<%= img %>" class="<%= i === 0 ? 'active' : '' %>" aria-label="تصویر <%= i + 1 %>"><img src="<%= img %>" alt=""></button>
+            <% }); %>
+          </div>
+        <% } %>
+
+        <div class="mt-4" data-tabs>
+          <div class="tabs" role="tablist">
+            <button class="tab-btn active" data-tab="tab-desc" type="button">معرفی</button>
+            <button class="tab-btn" data-tab="tab-features" type="button">امکانات</button>
+            <% if (product.requirements_text || product.compatibility_text) { %><button class="tab-btn" data-tab="tab-req" type="button">پیش‌نیازها و سازگاری</button><% } %>
+            <% if (faq.length) { %><button class="tab-btn" data-tab="tab-faq" type="button">پرسش‌های متداول</button><% } %>
+          </div>
+          <div class="tab-panel active rich" id="tab-desc"><%- product.descriptionHtml %></div>
+          <div class="tab-panel" id="tab-features">
+            <ul class="check-list">
+              <% product.features.forEach(function (f) { %>
+                <li><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span><%= f %></span></li>
+              <% }); %>
+            </ul>
+          </div>
+          <div class="tab-panel rich" id="tab-req">
+            <% if (product.requirements_text) { %><h3>پیش‌نیازها</h3><p><%= product.requirements_text %></p><% } %>
+            <% if (product.compatibility_text) { %><h3>سازگاری</h3><p><%= product.compatibility_text %></p><% } %>
+          </div>
+          <div class="tab-panel" id="tab-faq">
+            <% faq.forEach(function (f) { %>
+              <details class="faq-item"><summary><%= f.q %></summary><div class="faq-a"><%= f.a %></div></details>
+            <% }); %>
+          </div>
+        </div>
+      </div>
+
+      <!-- buy box -->
+      <aside class="card card-pad-lg buy-box">
+        <div class="flex wrap" style="gap:.4rem">
+          <% if (product.category_name) { %><a class="pill pill-cyan" href="/shop?category=<%= product.category_slug %>"><%= product.category_name %></a><% } %>
+          <% if (product.off > 0) { %><span class="pill pill-off"><%= h.fmtMoney(product.off) %>٪ تخفیف</span><% } %>
+          <% if (product.is_featured) { %><span class="pill pill-hot">محصول ویژه</span><% } %>
+        </div>
+        <h1 class="h3 mt-2" style="line-height:1.7"><%= product.title %></h1>
+        <p class="muted small mt-1"><%= product.summary %></p>
+        <div class="bb-price">
+          <% if (product.off > 0) { %><span class="old"><%= h.fmtMoney(product.price) %></span><% } %>
+          <span class="now"><%= h.fmtMoney(product.finalPrice) %></span>
+          <span class="muted small"><%= settings.currency %></span>
+        </div>
+        <form method="POST" action="/cart/add">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <input type="hidden" name="product_id" value="<%= product.id %>">
+          <input type="hidden" name="redirect" value="/cart">
+          <button type="submit" class="btn btn-primary btn-lg btn-block">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+            افزودن به سبد خرید
+          </button>
+        </form>
+        <% if (product.has_demo_url && product.demo_url) { %>
+          <a class="btn btn-outline btn-block mt-2" href="<%= product.demo_url %>" target="_blank" rel="noopener nofollow">مشاهده دمو</a>
+        <% } %>
+        <% if (!gateway.connected) { %>
+          <div class="gateway-note mt-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <span>درگاه پرداخت این فروشگاه هنوز به سرویس واقعی متصل نشده است (<%= gateway.detail %>) تا اتصال کامل شود، تکمیل خرید ممکن نیست.</span>
+          </div>
+        <% } else if (gateway.test) { %>
+          <div class="gateway-note mt-2">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+            <span>پرداخت‌ها فعلاً از مسیر <strong>درگاه آزمایشی</strong> انجام می‌شود — پول واقعی جابه‌جا نمی‌شود.</span>
+          </div>
+        <% } %>
+        <div class="meta-list">
+          <div class="m-row"><span class="m-k">نسخه</span><span class="m-v" style="direction:ltr"><%= product.version %></span></div>
+          <div class="m-row"><span class="m-k">نوع مجوز</span><span class="m-v"><%= {standard:'استاندارد',extended:'توسعه‌یافته','single-site':'تک‌سایت',developer:'توسعه‌دهنده',saas:'SaaS'}[product.license_type] || product.license_type %></span></div>
+          <% if (files.length) { %><div class="m-row"><span class="m-k">فایل تحویلی</span><span class="m-v">ZIP — نسخه <%= files[0].version %></span></div><% } %>
+          <div class="m-row"><span class="m-k">تحویل</span><span class="m-v">فوری پس از تأیید پرداخت</span></div>
+        </div>
+        <% if (product.license_note) { %><div class="alert info" style="font-size:.8rem"><span><%= product.license_note %></span></div><% } %>
+        <% if (product.support_terms) { %>
+          <hr class="divider">
+          <h4 class="small" style="color:var(--cyan)">شرایط پشتیبانی</h4>
+          <p class="small muted mt-1"><%= product.support_terms %></p>
+        <% } %>
+      </aside>
+    </div>
+
+    <!-- related -->
+    <% if (related.length) { %>
+      <div class="mt-4" style="margin-top:3.5rem">
+        <h2 class="h3 mb-3">محصولات مرتبط</h2>
+        <div class="grid grid-4">
+          <% related.forEach(function (p) { %>
+            <%- include('../partials/product-card', { p: p }) %>
+          <% }); %>
+        </div>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script type="application/ld+json" nonce="<%= cspNonce %>">
+<%- JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": product.title,
+  "description": product.summary,
+  "image": product.images[0] || product.cover_image,
+  "softwareVersion": product.version,
+  "brand": { "@type": "Brand", "name": settings.name },
+  "offers": {
+    "@type": "Offer",
+    "price": product.finalPrice,
+    "priceCurrency": "IRT",
+    "availability": "https://schema.org/InStock",
+    "url": undefined
+  }
+}) %>
+</script>
+
+<%- include('../partials/footer') %>

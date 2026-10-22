@@ -1,0 +1,119 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><span>سبد خرید</span></nav>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container">
+    <h1 class="h2 mb-3">سبد خرید</h1>
+    <% if (!details.lines.length) { %>
+      <div class="card empty-state">
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+        <h3 class="mb-1">سبد خرید شما خالی است</h3>
+        <p class="mb-3">محصولات دیجیتال آماده ما را ببینید — تحویل فوری پس از پرداخت.</p>
+        <a class="btn btn-primary" href="/shop">رفتن به فروشگاه</a>
+      </div>
+    <% } else { %>
+      <div class="cart-layout">
+        <div>
+          <% details.lines.forEach(function (l) { %>
+            <div class="card cart-item mb-2" data-cart-item>
+              <div class="ci-img"><a href="/product/<%= l.product.slug %>"><img src="<%= l.product.cover_image %>" alt="<%= l.product.title %>"></a></div>
+              <div>
+                <a href="/product/<%= l.product.title ? l.product.slug : '#' %>" style="font-weight:800;color:var(--text)"><%= l.product.title %></a>
+                <div class="small faint mt-1">نسخه <span style="direction:ltr;display:inline-block"><%= l.product.version %></span>
+                  <% if (l.product.category_name) { %> · <%= l.product.category_name %><% } %>
+                </div>
+                <div class="small mt-1"><%= h.fmtMoney(l.unit) %> <%= settings.currency %> / هر مورد</div>
+              </div>
+              <div class="ci-actions flex" style="gap:1rem;align-items:center">
+                <div class="qty-control">
+                  <button type="button" data-step="1" aria-label="افزایش">+</button>
+                  <input type="text" value="<%= l.qty %>" readonly aria-label="تعداد">
+                  <button type="button" data-step="-1" aria-label="کاهش">−</button>
+                </div>
+                <div class="price-box" style="min-width:110px">
+                  <div class="price-now"><%= h.fmtMoney(l.lineTotal) %></div>
+                </div>
+                <form method="POST" action="/cart/remove" data-remove>
+                  <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                  <input type="hidden" name="product_id" value="<%= l.product.id %>">
+                  <button type="submit" class="icon-btn" title="حذف" aria-label="حذف" style="width:36px;height:36px;border-color:rgba(248,113,113,.3);color:var(--bad)">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/></svg>
+                  </button>
+                </form>
+              </div>
+              <form method="POST" action="/cart/update" class="hidden" data-update>
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+                <input type="hidden" name="product_id" value="<%= l.product.id %>">
+                <input type="hidden" name="qty" value="">
+              </form>
+            </div>
+          <% }); %>
+          <form method="POST" action="/cart/clear" data-confirm="همه اقلام سبد خرید حذف شوند؟" class="mt-2">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <button class="btn btn-sm btn-ghost" type="submit">خالی کردن سبد</button>
+          </form>
+        </div>
+
+        <aside class="card summary-box">
+          <h3 class="h3 mb-2">خلاصه سفارش</h3>
+          <div class="summary-row"><span>جمع کل (<%= h.fmtMoney(details.count) %> مورد)</span><span><%= h.fmtMoney(details.subtotal) %> <%= settings.currency %></span></div>
+          <% if (details.discountTotal > 0) { %>
+            <div class="summary-row"><span>تخفیف <%= details.coupon ? '(' + details.coupon.code + ')' : '' %></span><span class="green">− <%= h.fmtMoney(details.discountTotal) %> <%= settings.currency %></span></div>
+          <% } %>
+          <div class="summary-row total"><span>مبلغ قابل پرداخت</span><span><%= h.fmtMoney(details.total) %> <%= settings.currency %></span></div>
+
+          <form method="POST" action="/cart/coupon" class="mt-3">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <label class="form-label small" for="coupon_code">کد تخفیف</label>
+            <div class="flex" style="gap:.5rem">
+              <input class="input" id="coupon_code" name="coupon_code" value="<%= details.couponCode || '' %>" placeholder="مثلاً WELCOME10" style="direction:ltr;text-align:left">
+              <button class="btn btn-ghost btn-sm" type="submit">اعمال</button>
+            </div>
+          </form>
+
+          <a class="btn btn-primary btn-lg btn-block mt-3" href="/checkout">
+            ادامه فرآیند خرید
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </a>
+          <% if (!gateway.connected) { %>
+            <div class="gateway-note">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>وضعیت درگاه پرداخت: <strong><%= gateway.label %></strong> — <%= gateway.detail %></span>
+            </div>
+          <% } else if (gateway.test) { %>
+            <div class="gateway-note">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+              <span>پرداخت از طریق <strong>درگاه آزمایشی</strong> انجام می‌شود (تست چرخه خرید — بدون تراکنش واقعی).</span>
+            </div>
+          <% } else { %>
+            <div class="gateway-note connected">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><path d="M20 6 9 17l-5-5"/></svg>
+              <span>پرداخت امن از طریق <strong><%= gateway.label %></strong></span>
+            </div>
+          <% } %>
+        </aside>
+      </div>
+    <% } %>
+  </div>
+</section>
+
+<script nonce="<%= cspNonce %>">
+  document.querySelectorAll('[data-cart-item]').forEach(function (item) {
+    var input = item.querySelector('.qty-control input');
+    var upd = item.querySelector('form[data-update] input[name=qty]');
+    item.querySelectorAll('.qty-control button').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var step = parseInt(b.dataset.step, 10);
+        var val = Math.max(0, Math.min(9, (parseInt(input.value, 10) || 0) + step));
+        if (val === 0) { item.querySelector('form[data-remove]').submit(); }
+        else { upd.value = val; item.querySelector('form[data-update]').submit(); }
+      });
+    });
+  });
+</script>
+
+<%- include('../partials/footer') %>

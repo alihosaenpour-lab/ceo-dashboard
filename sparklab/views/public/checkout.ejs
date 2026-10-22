@@ -1,0 +1,78 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="container">
+  <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><a href="/cart">سبد خرید</a><span class="sep">/</span><span>تکمیل سفارش</span></nav>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container">
+    <h1 class="h2 mb-3">تکمیل سفارش و پرداخت</h1>
+    <div class="cart-layout">
+      <div class="card card-pad-lg">
+        <% if (!currentUser) { %>
+          <div class="alert info mb-3">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.3rem"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <span>برای مشاهده سفارش‌ها و دانلودهای خود در پنل حساب، بهتر است <a href="/auth/login?next=/checkout">وارد شوید</a> یا <a href="/auth/register?next=/checkout">حساب بسازید</a>. خرید مهمان نیز ممکن است اما دسترسی به فایل‌ها از طریق لینک امن همان نشست انجام می‌شود.</span>
+          </div>
+        <% } %>
+        <form method="POST" action="/checkout" id="checkout-form">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="f-name">نام و نام خانوادگی <span class="req">*</span></label>
+              <input class="input <%= errors.name ? 'invalid' : '' %>" id="f-name" name="name" value="<%= values.name %>" required>
+              <% if (errors.name) { %><span class="form-error"><%= errors.name %></span><% } %>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="f-phone">شماره موبایل <span class="req">*</span></label>
+              <input class="input <%= errors.phone ? 'invalid' : '' %>" id="f-phone" name="phone" value="<%= values.phone %>" placeholder="09121234567" inputmode="tel" required>
+              <% if (errors.phone) { %><span class="form-error"><%= errors.phone %></span><% } %>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="f-email">ایمیل <span class="req">*</span></label>
+            <input class="input <%= errors.email ? 'invalid' : '' %>" id="f-email" name="email" type="email" value="<%= values.email %>" placeholder="you@example.com" dir="ltr" style="text-align:left" required>
+            <span class="form-hint">رسید خرید و اطلاعیه‌های سفارش به این ایمیل ارسال می‌شود.</span>
+            <% if (errors.email) { %><span class="form-error"><%= errors.email %></span><% } %>
+          </div>
+          <div class="check-row mt-2">
+            <input type="checkbox" id="f-accept" name="accept_terms" value="1" required>
+            <label for="f-accept"><a href="/p/purchase-terms" target="_blank">شرایط خرید</a> و <a href="/p/refund" target="_blank">رویه بازپرداخت</a> را خوانده و می‌پذیرم. <span class="req">*</span></label>
+          </div>
+          <% if (errors.accept_terms) { %><span class="form-error"><%= errors.accept_terms %></span><% } %>
+          <button type="submit" class="btn btn-primary btn-lg btn-block mt-3" <%= gw.connected ? '' : 'disabled' %>>
+            <% if (gw.connected) { %>
+              پرداخت <%= h.fmtMoney(details.total) %> <%= details.currency %> و تکمیل سفارش
+            <% } else { %>
+              درگاه پرداخت متصل نیست — ثبت سفارش ممکن نیست
+            <% } %>
+          </button>
+          <% if (gw.test) { %>
+            <p class="tiny faint text-center mt-2">شما به «درگاه آزمایشی» هدایت می‌شود؛ در آن صفحه نتیجه تراکنش (موفق/ناموفق) را خودتان انتخاب می‌کنید تا چرخه سفارش آزمایش شود.</p>
+          <% } %>
+        </form>
+      </div>
+
+      <aside class="card summary-box">
+        <h3 class="h3 mb-2">سفارش شما</h3>
+        <% details.lines.forEach(function (l) { %>
+          <div class="summary-row">
+            <span style="max-width:200px"><%= l.product.title %> × <%= h.fmtMoney(l.qty) %></span>
+            <span><%= h.fmtMoney(l.lineTotal) %></span>
+          </div>
+        <% }); %>
+        <% if (details.discountTotal > 0) { %>
+          <div class="summary-row"><span>تخفیف <%= details.coupon ? '(' + details.coupon.code + ')' : '' %></span><span class="green">− <%= h.fmtMoney(details.discountTotal) %></span></div>
+        <% } %>
+        <div class="summary-row total"><span>مبلغ قابل پرداخت</span><span><%= h.fmtMoney(details.total) %> <%= details.currency %></span></div>
+        <div class="gateway-note <%= gw.connected && !gw.test ? 'connected' : '' %>" style="margin-top:1rem">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:.25rem"><rect width="18" height="11" x="3" y="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>وضعیت درگاه: <strong><%= gw.label %></strong><br><%= gw.detail %></span>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

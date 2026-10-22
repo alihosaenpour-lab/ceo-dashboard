@@ -1,0 +1,132 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumbs"><a href="/">خانه</a><span class="sep">/</span><span>ثبت سفارش پروژه</span></nav>
+    <h1>ثبت سفارش پروژه</h1>
+    <p>نیاز خود را شرح دهید؛ کارشناسان اسپارک لب ظرف حداکثر ۲ روز کاری بررسی کرده و برآورد هزینه و زمان را اعلام می‌کنند. تکمیل فرم و مشاوره اولیه رایگان است.</p>
+  </div>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container">
+    <div class="grid-contact">
+      <div class="card card-pad-lg">
+        <% if (query.done) { %>
+          <div class="alert ok mb-3">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="flex-shrink:0;margin-top:.3rem"><path d="M20 6 9 17l-5-5"/></svg>
+            <span>درخواست شما با کد پیگیری <b style="direction:ltr;display:inline-block"><%= query.done %></b> ثبت شد. وضعیت پروژه را می‌توانید از طریق ایمیل یا با ساختن/ورود به حساب کاربری دنبال کنید.</span>
+          </div>
+        <% } %>
+        <form method="POST" action="/projects/new?_csrf=<%= csrfToken %>" enctype="multipart/form-data">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <h2 class="h3 mb-3">مشخصات شما</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-name">نام و نام خانوادگی <span class="req">*</span></label>
+              <input class="input <%= errors.name ? 'invalid' : '' %>" id="p-name" name="name" value="<%= values.name || (currentUser ? currentUser.name : '') %>" required>
+              <% if (errors.name) { %><span class="form-error"><%= errors.name %></span><% } %>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-phone">شماره موبایل <span class="req">*</span></label>
+              <input class="input <%= errors.phone ? 'invalid' : '' %>" id="p-phone" name="phone" value="<%= values.phone || (currentUser ? currentUser.phone || '' : '') %>" placeholder="09121234567" inputmode="tel" required>
+              <% if (errors.phone) { %><span class="form-error"><%= errors.phone %></span><% } %>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-email">ایمیل <span class="req">*</span></label>
+            <input class="input <%= errors.email ? 'invalid' : '' %>" id="p-email" name="email" type="email" dir="ltr" style="text-align:left" value="<%= values.email || (currentUser ? currentUser.email : '') %>" required>
+            <% if (errors.email) { %><span class="form-error"><%= errors.email %></span><% } %>
+          </div>
+
+          <h2 class="h3 mb-3 mt-4">درباره پروژه</h2>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-type">نوع پروژه <span class="req">*</span></label>
+              <select class="select <%= errors.project_type ? 'invalid' : '' %>" id="p-type" name="project_type" required>
+                <option value="">انتخاب کنید…</option>
+                <% types.forEach(function (t) { %>
+                  <option value="<%= t.id %>" <%= (values.project_type === t.id || query.type === t.id) ? 'selected' : '' %>><%= t.label %></option>
+                <% }); %>
+              </select>
+              <% if (errors.project_type) { %><span class="form-error"><%= errors.project_type %></span><% } %>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-title">عنوان پروژه <span class="req">*</span></label>
+              <input class="input <%= errors.title ? 'invalid' : '' %>" id="p-title" name="title" value="<%= values.title || '' %>" placeholder="مثلاً: فروشگاه آنلاین لوازم یدکی" required>
+              <% if (errors.title) { %><span class="form-error"><%= errors.title %></span><% } %>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="p-desc">شرح نیاز <span class="req">*</span></label>
+            <textarea class="textarea <%= errors.description ? 'invalid' : '' %>" id="p-desc" name="description" style="min-height:190px" placeholder="چه چیزی می‌خواهید بسازید؟ کاربران اصلی چه کسانی هستند؟ چه امکاناتی لازم دارید؟ آیا سیستم فعلی یا داده‌ای دارید که باید متصل شود؟" required><%= values.description || '' %></textarea>
+            <span class="form-hint">حداقل ۲۰ نویسه — هرچه دقیق‌تر بنویسید، برآورد دقیق‌تر خواهد بود.</span>
+            <% if (errors.description) { %><span class="form-error"><%= errors.description %></span><% } %>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label" for="p-budget">بودجه تقریبی</label>
+              <select class="select" id="p-budget" name="budget_range">
+                <option value="">ترجیح می‌دهم پس از مشاوره تعیین شود</option>
+                <% budgets.forEach(function (b) { %>
+                  <option value="<%= b %>" <%= values.budget_range === b ? 'selected' : '' %>><%= b %></option>
+                <% }); %>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="p-timeline">زمان مورد انتظار</label>
+              <input class="input" id="p-timeline" name="timeline" value="<%= values.timeline || '' %>" placeholder="مثلاً: تا پایان پاییز ۱۴۰۴">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">فایل پیوست <span class="tiny faint">(اختیاری — حداکثر ۳ فایل، هر کدام تا ۱۰ مگابایت)</span></label>
+            <div class="file-drop">
+              <input type="file" name="attachments" multiple accept=".zip,.rar,.7z,.pdf,.txt,.png,.jpg,.jpeg,.doc,.docx">
+              <span class="form-hint">RFP، طرح اولیه، مستندات فنی یا تصاویر نمونه. فایل‌ها در فضای خصوصی نگهداری می‌شوند.</span>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-lg btn-block" type="submit">
+            ثبت درخواست پروژه
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          </button>
+        </form>
+      </div>
+
+      <aside>
+        <div class="card mb-2">
+          <h3 class="h3 mb-2">پس از ثبت درخواست چه اتفاقی می‌افتد؟</h3>
+          <div class="timeline" style="flex-direction:column;gap:.9rem">
+            <div class="flex" style="gap:.8rem;align-items:flex-start">
+              <span class="step-num" style="width:32px;height:32px;font-size:.85rem;margin:0;flex-shrink:0">۱</span>
+              <div><b class="small">دریافت درخواست</b><p class="tiny muted">کد پیگیری بلافاصله نمایش داده می‌شود.</p></div>
+            </div>
+            <div class="flex" style="gap:.8rem;align-items:flex-start">
+              <span class="step-num" style="width:32px;height:32px;font-size:.85rem;margin:0;flex-shrink:0">۲</span>
+              <div><b class="small">بررسی کارشناسی</b><p class="tiny muted">حداکثر ۲ روز کاری — ممکن است برای شفاف‌سازی تماس بگیریم.</p></div>
+            </div>
+            <div class="flex" style="gap:.8rem;align-items:flex-start">
+              <span class="step-num" style="width:32px;height:32px;font-size:.85rem;margin:0;flex-shrink:0">۳</span>
+              <div><b class="small">برآورد هزینه و زمان</b><p class="tiny muted">پیشنهاد مکتوب با فازبندی و شرایط پرداخت دریافت می‌کنید.</p></div>
+            </div>
+            <div class="flex" style="gap:.8rem;align-items:flex-start">
+              <span class="step-num" style="width:32px;height:32px;font-size:.85rem;margin:0;flex-shrink:0">۴</span>
+              <div><b class="small">اجرا و تحویل</b><p class="tiny muted">پس از تأیید شما، پروژه با بازبینی مرحله‌ای پیش می‌رود.</p></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <h4 class="small" style="color:var(--cyan)">چرا اسپارک لب؟</h4>
+          <ul class="check-list mt-2">
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>برآورد شفاف پیش از شروع — بدون هزینه پنهان</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>تحویل مرحله‌ای با امکان بازبینی شما</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>دوره تضمین رفع باگ پس از استقرار</span></li>
+            <li><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg><span>مالکیت کامل کد و داده‌ها متعلق به شماست</span></li>
+          </ul>
+        </div>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

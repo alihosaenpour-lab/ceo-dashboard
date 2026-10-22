@@ -1,0 +1,35 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<section class="section">
+  <div class="container" style="max-width:460px">
+    <div class="card card-pad-lg">
+      <div class="text-center mb-3">
+        <img src="/img/logo-icon.svg" alt="" style="width:52px;margin:0 auto">
+        <h1 class="h2 mt-2">ورود به حساب</h1>
+        <p class="muted small">برای خرید، دانلود فایل‌ها و پیگیری پروژه‌ها وارد شوید.</p>
+      </div>
+      <form method="POST" action="/auth/login">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+        <% if (next) { %><input type="hidden" name="next" value="<%= next %>"><% } %>
+        <div class="form-group">
+          <label class="form-label" for="l-email">ایمیل</label>
+          <input class="input <%= errors.email ? 'invalid' : '' %>" id="l-email" name="email" type="email" dir="ltr" style="text-align:left" value="<%= values.email || '' %>" required autofocus>
+          <% if (errors.email) { %><span class="form-error"><%= errors.email %></span><% } %>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="l-pass">رمز عبور</label>
+          <input class="input <%= errors.password ? 'invalid' : '' %>" id="l-pass" name="password" type="password" required>
+        </div>
+        <button class="btn btn-primary btn-lg btn-block" type="submit">ورود</button>
+      </form>
+      <hr class="divider">
+      <div class="flex-between small">
+        <a href="/auth/forgot">بازیابی رمز عبور</a>
+        <span class="muted">حساب ندارید؟ <a href="/auth/register">ثبت‌نام کنید</a></span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

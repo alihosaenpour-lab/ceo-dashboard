@@ -1,0 +1,60 @@
+<%- include('../partials/head') %>
+<body class="admin-body">
+<div class="admin-shell">
+  <%- include('../partials/admin-side') %>
+  <div class="admin-main">
+    <%- include('../partials/admin-top') %>
+    <%- include('../partials/flash') %>
+    <div class="admin-content">
+      <div class="panel-title">
+        <h1>مدیریت محتوا</h1>
+        <div class="flex wrap">
+          <a class="btn btn-sm <%= currentPath === '/admin/content/pages' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/content/pages">صفحات</a>
+          <a class="btn btn-sm <%= currentPath === '/admin/content/portfolio' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/content/portfolio">نمونه‌کارها</a>
+          <a class="btn btn-sm <%= currentPath === '/admin/content/banners' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/content/banners">بنرها</a>
+          <a class="btn btn-sm <%= currentPath === '/admin/content/faqs' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/content/faqs">پرسش‌های متداول</a>
+          <a class="btn btn-sm <%= currentPath === '/admin/content/messages' ? 'btn-primary' : 'btn-ghost' %>" href="/admin/content/messages">پیام‌های تماس</a>
+        </div>
+      </div>
+
+      <div class="grid grid-2 mb-3" style="grid-template-columns:380px 1fr;align-items:start">
+        <div class="card">
+          <h2 class="h3 mb-3">صفحه جدید</h2>
+          <form method="POST" action="/admin/content/pages/new">
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+            <div class="form-group">
+              <label class="form-label">عنوان <span class="req">*</span></label>
+              <input class="input" name="title" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">نشانی (slug)</label>
+              <input class="input" name="slug" dir="ltr" style="text-align:left" placeholder="auto">
+            </div>
+            <button class="btn btn-primary btn-block" type="submit">ایجاد صفحه</button>
+          </form>
+        </div>
+        <div class="table-wrap">
+          <table class="tbl">
+            <thead><tr><th>عنوان</th><th>نشانی</th><th>فوتر</th><th>وضعیت</th><th>به‌روزرسانی</th><th></th></tr></thead>
+            <tbody>
+              <% pages.forEach(function (p) { %>
+                <tr>
+                  <td><b class="small"><%= p.title %></b></td>
+                  <td class="tiny" style="direction:ltr;text-align:right"><a href="/p/<%= p.slug %>" target="_blank">/p/<%= p.slug %></a></td>
+                  <td><%= p.show_in_footer ? '✓' : '—' %></td>
+                  <td><span class="status <%= p.is_active ? 'ok' : 'muted' %>"><%= p.is_active ? 'فعال' : 'پیش‌نویس' %></span></td>
+                  <td class="tiny"><%= p.updated_at ? h.fmtDate(p.updated_at) : '—' %></td>
+                  <td><a class="btn btn-ghost btn-sm" href="/admin/content/pages/<%= p.id %>/edit">ویرایش</a></td>
+                </tr>
+              <% }); %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script nonce="<%= cspNonce %>">window.SPARK_CSRF = <%- JSON.stringify(csrfToken) %>;</script>
+<script src="/js/admin.js" defer></script>
+</body>
+</html>

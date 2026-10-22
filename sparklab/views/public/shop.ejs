@@ -1,0 +1,104 @@
+<%- include('../partials/head') %>
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="container">
+    <nav class="breadcrumbs" aria-label="مسیر">
+      <a href="/">خانه</a><span class="sep">/</span><a href="/shop">فروشگاه</a>
+      <% if (category) { %><span class="sep">/</span><span><%= category.name %></span><% } %>
+    </nav>
+    <h1><%= category ? category.name : 'فروشگاه محصولات دیجیتال' %></h1>
+    <p><%= category ? (category.description || 'محصولات دسته ' + category.name) : 'نرم‌افزارهای آماده با تحویل فوری پس از پرداخت، مجوز شفاف و پشتیبانی واقعی.' %></p>
+  </div>
+</div>
+
+<section class="section-tight" style="padding-bottom:4rem">
+  <div class="container">
+    <div class="shop-layout">
+      <!-- filters -->
+      <aside class="card filter-card" aria-label="فیلترها">
+        <form method="GET" action="/shop" id="filter-form">
+          <% if (category) { %><input type="hidden" name="category" value="<%= category.slug %>"><% } %>
+          <% if (q) { %><input type="hidden" name="q" value="<%= q %>"><% } %>
+          <div class="filter-block">
+            <h4>دسته‌بندی</h4>
+            <a class="filter-link <%= !category ? 'active' : '' %>" href="/shop<%= q ? '?q=' + encodeURIComponent(q) : '' %>">همه محصولات</a>
+            <% categories.forEach(function (c) { %>
+              <a class="filter-link <%= category && category.id === c.id ? 'active' : '' %>" href="/shop?category=<%= c.slug %><%= q ? '&q=' + encodeURIComponent(q) : '' %>">
+                <%= c.name %>
+              </a>
+            <% }); %>
+          </div>
+          <div class="filter-block">
+            <h4>نوع محصول</h4>
+            <a class="filter-link <%= type === 'all' ? 'active' : '' %>" href="?<%= new URLSearchParams({ ...query, type: undefined }).toString() %>">همه</a>
+            <a class="filter-link <%= type === 'discounted' ? 'active' : '' %>" href="?<%= new URLSearchParams({ ...query, type: 'discounted' }).toString() %>">تخفیف‌دار</a>
+            <a class="filter-link <%= type === 'featured' ? 'active' : '' %>" href="?<%= new URLSearchParams({ ...query, type: 'featured' }).toString() %>">ویژه</a>
+          </div>
+          <div class="filter-block">
+            <h4>محدوده قیمت (<%= settings.currency %>)</h4>
+            <div class="price-inputs">
+              <input class="input" type="number" min="0" name="min" placeholder="از" value="<%= minP !== null ? minP : '' %>">
+              <span class="faint">—</span>
+              <input class="input" type="number" min="0" name="max" placeholder="تا" value="<%= maxP !== null ? maxP : '' %>">
+            </div>
+            <button type="submit" class="btn btn-ghost btn-sm btn-block mt-2">اعمال فیلترها</button>
+          </div>
+        </form>
+      </aside>
+
+      <!-- results -->
+      <div>
+        <div class="toolbar">
+          <form class="search-inline" method="GET" action="/shop" role="search">
+            <% if (category) { %><input type="hidden" name="category" value="<%= category.slug %>"><% } %>
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <input class="input" type="search" name="q" value="<%= q %>" placeholder="جست‌وجوی محصول…" aria-label="جست‌وجو">
+          </form>
+          <div class="flex wrap" style="gap:.6rem">
+            <span class="small faint"><%= h.fmtMoney(total) %> محصول</span>
+            <form method="GET" action="/shop" style="display:flex;gap:.5rem;align-items:center">
+              <% if (category) { %><input type="hidden" name="category" value="<%= category.slug %>"><% } %>
+              <% if (q) { %><input type="hidden" name="q" value="<%= q %>"><% } %>
+              <% if (type !== 'all') { %><input type="hidden" name="type" value="<%= type %>"><% } %>
+              <% if (minP !== null) { %><input type="hidden" name="min" value="<%= minP %>"><% } %>
+              <% if (maxP !== null) { %><input type="hidden" name="max" value="<%= maxP %>"><% } %>
+              <label class="small faint" for="sort">مرتب‌سازی:</label>
+              <select class="select" name="sort" id="sort" onchange="this.form.submit()" style="width:auto;padding:.45rem 2.2rem .45rem .8rem;font-size:.84rem">
+                <option value="newest" <%= sort === 'newest' ? 'selected' : '' %>>جدیدترین</option>
+                <option value="cheapest" <%= sort === 'cheapest' ? 'selected' : '' %>>ارزان‌ترین</option>
+                <option value="priciest" <%= sort === 'priciest' ? 'selected' : '' %>>گران‌ترین</option>
+                <option value="bestselling" <%= sort === 'bestselling' ? 'selected' : '' %>>پرفروش‌ترین</option>
+              </select>
+            </form>
+          </div>
+        </div>
+
+        <% if (!products.length) { %>
+          <div class="card empty-state">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+            <h3 class="mb-1">محصولی یافت نشد</h3>
+            <p>با فیلترهای دیگر جست‌وجو کنید یا به <a href="/shop">صفحه فروشگاه</a> برگردید.</p>
+          </div>
+        <% } else { %>
+          <div class="grid grid-3">
+            <% products.forEach(function (p) { %>
+              <%- include('../partials/product-card', { p: p }) %>
+            <% }); %>
+          </div>
+          <% if (pages > 1) { %>
+            <nav class="pagination" aria-label="صفحه‌بندی">
+              <% for (let i = 1; i <= pages; i++) { %>
+                <% const qs = new URLSearchParams({ ...query, page: i }).toString(); %>
+                <% if (i === page) { %><span class="current"><%= h.fmtMoney(i) %></span>
+                <% } else { %><a href="?<%= qs %>"><%= h.fmtMoney(i) %></a><% } %>
+              <% } %>
+            </nav>
+          <% } %>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</section>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= typeof title !== 'undefined' && title ? title : (settings.name_fa + ' | ' + settings.tagline) %></title>
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : settings.description %>">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="<%= settings.name_fa %>">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' && title ? title : settings.name_fa %>">
+  <meta property="og:description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : settings.description %>">
+  <meta property="og:locale" content="fa_IR">
+  <meta name="theme-color" content="#070b14">
+  <link rel="icon" type="image/svg+xml" href="/img/favicon.svg">
+  <link rel="stylesheet" href="/css/style.css">
+  <% if (typeof canonical !== 'undefined' && canonical) { %><link rel="canonical" href="<%= canonical %>"><% } %>
+  <% if (typeof extraHead !== 'undefined') { %><%- extraHead %><% } %>
+</head>
